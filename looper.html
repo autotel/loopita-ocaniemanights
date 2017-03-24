@@ -24,15 +24,15 @@
   <body>
     <div id="listContainer"></div>
     <div id="loopersContainer"></div>
-    <div id="channelsContainer">
-
-  </div>
+    <div id="channelsContainer"></div>
+    <div id="levels-container"></div>
   </body>
   <script>
  "use strict";
  var loopers=[];
  var effectsRack;
  var search = getUrlVars()["s"];
+ var meters=[];
  $(document).ready(function(){
     if(search){
       console.log("limiting db results to "+search);
@@ -48,6 +48,11 @@
       if(loadThisOne){
         var newLoop=new Looper.GuiLoop();
         newLoop.$appendTo($("#loopersContainer"));
+
+        if(!meters.indexOf(newLoop.voicen)){
+          meters.push(new Tone.Meter());
+        }
+        newLoop.engine.connect(meters[newLoop.voicen]);
         // console.log(loopsDatabase[a]);
         newLoop.setSampler(loopsDatabase[a]);
         loopers.push(newLoop);
@@ -59,6 +64,13 @@
         loopers[a].beat(ev.step/8);
       }
     });
+    function draw() {
+      for(var a in meters){
+        var val = meter[a].value;
+      }
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
 })
 function getUrlVars() {
   var vars = {};

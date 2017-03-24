@@ -11,7 +11,9 @@ $(window).on("load", function() {
 	//console.log("load");
 
 	Looper = (function() {
-		var currentPat=[0];
+		//if we define it as array, we will have a mutating array. if defined as int, we will have a mono-state
+		//var currentPat=[0];
+		var currentPat=0;
 		var LooperMan=this;
 		var looperList=[];
 		//pendant: this makes the code very unportable.
@@ -44,37 +46,46 @@ $(window).on("load", function() {
 		}
 		this.updateAvailables=function(){
 			//currentPat is an intersection of all the patterns to which each sample belongs
-			var tCurrentPat=availablePats;
-			LooperMan.each(function(){
-				var thisLooper=this;
-				if(this.isTriggering){
-					tCurrentPat=tCurrentPat.filter(function(n) {
-					    return thisLooper.patn.indexOf(n) != -1;
-					});
-					//console.log(currentPat,this.patn);
-				}
+			//..depending wether monostate or not
+			if($.isArray(currentPat)){
+				var tCurrentPat=availablePats;
+				LooperMan.each(function(){
+					var thisLooper=this;
+					if(this.isTriggering){
+						tCurrentPat=tCurrentPat.filter(function(n) {
+						    return thisLooper.patn.indexOf(n) != -1;
+						});
+						//console.log(currentPat,this.patn);
+					}
 
-			});
-			currentPat=tCurrentPat;
-			//console.log("patn",currentPat);
-			//we only make available patterns that belong to any of the current patterns
-			LooperMan.each(function(){
-				var thisLooper=this;
-				for(var a in currentPat){
-					currentCurrentPat=currentPat[a];
-					if(tCurrentPat.filter(function(n) {
-					    return thisLooper.patn.indexOf(n) != -1;
-						}).length==[0]){
-						//console.log(this.sampleTitle+" doesnt belong");
+				});
+				currentPat=tCurrentPat;
+				//console.log("patn",currentPat);
+				//we only make available patterns that belong to any of the current patterns
+				LooperMan.each(function(){
+					var thisLooper=this;
+						if(tCurrentPat.filter(function(n) {
+						    return thisLooper.patn.indexOf(n) != -1;
+							}).length==[0]){
+							this.$.main.addClass("unavailable");
+						}else{
+							this.$.main.removeClass("unavailable");
+						}
+				});
+			}else{
+				//mono state mode
+				LooperMan.each(function(){
+					var thisLooper=this;
+					if(thisLooper.patn.indexOf(currentPat) == -1){
 						this.$.main.addClass("unavailable");
 					}else{
-						//console.log(this.sampleTitle+" belongs");
 						this.$.main.removeClass("unavailable");
 					}
-				}
-			});
+				});
+			}
 		}
 		this.pivotToPatN=function(to){
+
 			var founds=0;
 			//for each GuiLoop that is playing
 			LooperMan.each(function(){
@@ -92,7 +103,13 @@ $(window).on("load", function() {
 				LooperMan.each(function(){
 					this.metroLoop();
 				},{patn:to});
+
 			}
+			if(!$.isArray(currentPat)){
+				currentPat=to;
+				updateAvailables();
+			}
+
 		}
 		//console.log("create looperman");
 		//var $ = main.jQuery;

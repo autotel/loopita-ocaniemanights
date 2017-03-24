@@ -8,6 +8,17 @@ regex snippets:
 
 
 */
+var states={
+  0:{can:[1,2,3,4,6]},//br
+  1:{can:[2,3,4,6]},//br
+  2:{can:[1,3,4,6]},//br
+  3:{can:[1,2,4,6]},//br
+
+  4:{can:[5,0,1,2,3],switches:[5]},//chorus
+  5:{can:[4,0,1,2,3],switches:[4]},//chorus
+
+  6:{can:[0,1,2,3]},//chorus
+}
 var loopsDatabase=[{
     "name": "organ minor",
     "source": "audio/024_OcanBridg0  _Part04.mp3",
@@ -85,7 +96,7 @@ var loopsDatabase=[{
     "name": "shaker nrm pat 01.mp3",
     "source": "audio/025_OcanChor1   _Part08.mp3",
 		"voicen":8,
-		"patn":[1]
+		"patn":[0,1,2,3]
 }, {
     "name": "kick hi pat 02.mp3",
     "source": "audio/025_OcanChor1   _Part09.mp3",
@@ -144,7 +155,7 @@ var loopsDatabase=[{
     "name": "shaker nrm",
     "source": "audio/026_OcanBridg1  _Part08.mp3",
 		"voicen":8,
-		"patn":[2]
+		"patn":[4,5,6]
 }, {
     "name": "kick hi",
     "source": "audio/026_OcanBridg1  _Part09.mp3",
@@ -360,5 +371,10 @@ var loopsDatabase=[{
     "source": "audio/percBack.mp3",
 		"voicen":0,
 		"patn":[0,1,2,3,4,5,6]
+},{
+    "name": "trumpet loop",
+    "source": "audio/works/tlgen/benjaminharveydesign__rhinoceros-trumpet.wav",
+    "voicen":17
 }
+
 ]

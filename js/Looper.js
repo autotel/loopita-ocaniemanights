@@ -4,13 +4,65 @@ engineList = [];
 var Looper;
 
 $(window).on("load", function() {
+
+
+
+
 	console.log("load");
+
 	Looper = (function() {
+		var currentPat=[0];
+		var LooperMan=this;
+		var looperList=[];
+		//pendant: this makes the code very unportable.
+		var availablePats=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+		this.each=function(cb){
+			if(typeof cb != "function"){
+				console.error("Looper.each callback is not a function",cb);
+				return false;
+			}
+			for(var a in looperList){
+				cb.call(looperList[a]);
+			}
+		}
+		this.updateAvailables=function(){
+			//currentPat is an intersection of all the patterns to which each sample belongs
+			var tCurrentPat=availablePats;
+			LooperMan.each(function(){
+				var thisLooper=this;
+				if(this.isTriggering){
+					tCurrentPat=tCurrentPat.filter(function(n) {
+					    return thisLooper.patn.indexOf(n) != -1;
+					});
+					console.log(currentPat,this.patn);
+				}
+
+			});
+			currentPat=tCurrentPat;
+			console.log("patn",currentPat);
+			//we only make available patterns that belong to any of the current patterns
+			LooperMan.each(function(){
+				var thisLooper=this;
+				for(var a in currentPat){
+					currentCurrentPat=currentPat[a];
+					if(tCurrentPat.filter(function(n) {
+					    return thisLooper.patn.indexOf(n) != -1;
+						}).length==[0]){
+						console.log(this.sampleTitle+" doesnt belong");
+						this.$.main.addClass("unavailable");
+					}else{
+						console.log(this.sampleTitle+" belongs");
+						this.$.main.removeClass("unavailable");
+					}
+				}
+			});
+		}
+
 		console.log("create looperman");
 		//var $ = main.jQuery;
 		console.log($);
-		this.currentPat = 0;
 		this.GuiLoop = function() {
+			looperList.push(this);
 			console.log("create looper");
 			var me = this;
 			//how many beats does this sample last
@@ -82,6 +134,7 @@ $(window).on("load", function() {
 					this.isWaiting = true;
 					//pendant: remeasure my own beatsLength here aswell.
 					this.isTriggering = true;
+					LooperMan.updateAvailables();
 			}
 			this.beat = function(step) {
 					if (this.isTriggering && step % this.beatsLength == 0) {
@@ -105,6 +158,7 @@ $(window).on("load", function() {
 					} else {}
 					this.isTriggering = false;
 					this.engine.stop();
+					LooperMan.updateAvailables();
 			}
 			this.setSampler = function(databaseItem) {
 					var me = this;
@@ -113,10 +167,13 @@ $(window).on("load", function() {
 									this.voicen = databaseItem.voicen;
 									this.$.main.addClass("voicen-" + this.voicen);
 							}
+							if (databaseItem.hasOwnProperty("patn")) {
+									this.patn = databaseItem.patn;
+							}
 							if (databaseItem.hasOwnProperty("name")) {
-									var titl = databaseItem.name;
-									if (this.$.samplerTitle) this.$.samplerTitle.html(titl);
-									var attrs = titl.split(' ');
+									me.sampleTitle = databaseItem.name;
+									if (this.$.samplerTitle) this.$.samplerTitle.html(me.sampleTitle );
+									var attrs = me.sampleTitle .split(' ');
 									this.$.main.addClass("inst-" + attrs[0]);
 									this.$.main.addClass("sub-" + attrs[1]);
 							} else {

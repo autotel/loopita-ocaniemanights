@@ -27,7 +27,7 @@ var loopsDatabase=[{
     "name": "hey nrm pat 01",
     "source": "audio/024_OcanBridg0  _Part07.mp3",
 		"voicen":7,
-		"patn":[0]
+		"patn":[0,2,3,4,5,6]
 }, {
     "name": "kick hi pat 01",
     "source": "audio/024_OcanBridg0  _Part09.mp3",
@@ -70,12 +70,12 @@ var loopsDatabase=[{
     "name": "djembe low pat 02",
     "source": "audio/025_OcanChor1   _Part05.mp3",
 		"voicen":5,
-		"patn":[1]
+		"patn":[1,3,4,5,6]
 }, {
     "name": "djembe hi pat 02",
     "source": "audio/025_OcanChor1   _Part06.mp3",
 		"voicen":6,
-		"patn":[1]
+		"patn":[1,3,4,5,6]
 }, {
     "name": "hey nrm pat 02",
     "source": "audio/025_OcanChor1   _Part07.mp3",
@@ -100,7 +100,7 @@ var loopsDatabase=[{
     "name": "clap nrm",
     "source": "audio/025_OcanChor1   _Part11.mp3",
 		"voicen":11,
-		"patn":[1]
+		"patn":[1,3,4,5,6]
 }, {
     "name": "kick low",
     "source": "audio/025_OcanChor1   _Part12.mp3",
@@ -154,7 +154,7 @@ var loopsDatabase=[{
     "name": "snare merry",
     "source": "audio/026_OcanBridg1  _Part10.mp3",
 		"voicen":10,
-		"patn":[3]
+		"patn":[2,3,4,5,6]
 }, /*{
     "name": "kick low",
     "source": "audio/026_OcanBridg1  _Part12.mp3",

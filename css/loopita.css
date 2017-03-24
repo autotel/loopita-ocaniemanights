@@ -32,7 +32,8 @@ body{
 }
 
 .looper.unavailable {
-  display:none;
+  pointer-events: none;
+  opacity: 0!important;
 }
 .looper.inst-bass {
     background-color: #25d8ff;

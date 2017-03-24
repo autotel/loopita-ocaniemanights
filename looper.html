@@ -45,11 +45,13 @@
           loadThisOne=false;
         }
       }
-      if(loadThisOne){var newLoop=new Looper();
-      newLoop.$appendTo($("#loopersContainer"));
-      // console.log(loopsDatabase[a]);
-      newLoop.setSampler(loopsDatabase[a]);
-      loopers.push(newLoop);}
+      if(loadThisOne){
+        var newLoop=new Looper.GuiLoop();
+        newLoop.$appendTo($("#loopersContainer"));
+        // console.log(loopsDatabase[a]);
+        newLoop.setSampler(loopsDatabase[a]);
+        loopers.push(newLoop);
+      }
     }
     effectsRack=new Rack($("#channelsContainer"));
     globalTransport.onBeat(function(ev){

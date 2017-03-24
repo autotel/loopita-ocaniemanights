@@ -31,7 +31,9 @@ body{
   }
 }
 
-
+.looper.unavailable {
+  display:none;
+}
 .looper.inst-bass {
     background-color: #25d8ff;
 }

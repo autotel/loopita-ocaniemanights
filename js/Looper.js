@@ -8,7 +8,7 @@ $(window).on("load", function() {
 
 
 
-	console.log("load");
+	//console.log("load");
 
 	Looper = (function() {
 		var currentPat=[0];
@@ -16,13 +16,30 @@ $(window).on("load", function() {
 		var looperList=[];
 		//pendant: this makes the code very unportable.
 		var availablePats=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
-		this.each=function(cb){
+		this.each=function(cb,filter){
 			if(typeof cb != "function"){
 				console.error("Looper.each callback is not a function",cb);
 				return false;
 			}
 			for(var a in looperList){
-				cb.call(looperList[a]);
+				var call=false;
+				if(filter){
+					var allMatch=true;
+					f_iter:for(var b in filter){
+						if(looperList[a][b]!=filter[b]){
+							//console.log("looperlist["+a+"] not ["+b+"]="+filter[b]+" ");
+							allMatch=false;
+							break f_iter;
+						}else{
+							//console.log("looperlist["+a+"] yes ["+b+"]="+filter[b]+" ");
+						}
+					}
+					call=allMatch;
+				}else{
+					call=true;
+				}
+				if(call)
+					cb.call(looperList[a]);
 			}
 		}
 		this.updateAvailables=function(){
@@ -34,12 +51,12 @@ $(window).on("load", function() {
 					tCurrentPat=tCurrentPat.filter(function(n) {
 					    return thisLooper.patn.indexOf(n) != -1;
 					});
-					console.log(currentPat,this.patn);
+					//console.log(currentPat,this.patn);
 				}
 
 			});
 			currentPat=tCurrentPat;
-			console.log("patn",currentPat);
+			//console.log("patn",currentPat);
 			//we only make available patterns that belong to any of the current patterns
 			LooperMan.each(function(){
 				var thisLooper=this;
@@ -48,22 +65,41 @@ $(window).on("load", function() {
 					if(tCurrentPat.filter(function(n) {
 					    return thisLooper.patn.indexOf(n) != -1;
 						}).length==[0]){
-						console.log(this.sampleTitle+" doesnt belong");
+						//console.log(this.sampleTitle+" doesnt belong");
 						this.$.main.addClass("unavailable");
 					}else{
-						console.log(this.sampleTitle+" belongs");
+						//console.log(this.sampleTitle+" belongs");
 						this.$.main.removeClass("unavailable");
 					}
 				}
 			});
 		}
-
-		console.log("create looperman");
+		this.pivotToPatN=function(to){
+			var founds=0;
+			//for each GuiLoop that is playing
+			LooperMan.each(function(){
+				//find same voice that has 'to' in it's 'patn'
+				this.stop();
+				LooperMan.each(function(){
+					if(this.patn.indexOf(to)!=-1){
+						this.metroLoop();
+						founds++;
+					}
+				},{voicen:this.voicen});
+				//stop this
+			},{isTriggering:true});
+			if(founds=0){
+				LooperMan.each(function(){
+					this.metroLoop();
+				},{patn:to});
+			}
+		}
+		//console.log("create looperman");
 		//var $ = main.jQuery;
-		console.log($);
+		//console.log($);
 		this.GuiLoop = function() {
 			looperList.push(this);
-			console.log("create looper");
+			//console.log("create looper");
 			var me = this;
 			//how many beats does this sample last
 			this.beatsLength = 0;
@@ -114,7 +150,7 @@ $(window).on("load", function() {
 			this.$appendTo = function($who) {
 				if ($who.length > 0) {
 					if (this.appended) {
-						console.log("warning: this element was appended already");
+						//console.log("warning: this element was appended already");
 					}
 					$who.append(this.$.main);
 					this.appendend = true;
@@ -151,11 +187,14 @@ $(window).on("load", function() {
 					if (this.playbackPosition !== false) {
 							this.playbackPosition = false;
 							this.$.main.removeClass("playing");
-							if (this.isWaiting) {
-									this.isWaiting = false;
-									this.$.main.removeClass("waiting");
-							}
+
 					} else {}
+
+					if (this.isWaiting) {
+							this.isWaiting = false;
+							this.$.main.removeClass("waiting");
+					}
+
 					this.isTriggering = false;
 					this.engine.stop();
 					LooperMan.updateAvailables();
@@ -214,7 +253,7 @@ $(window).on("load", function() {
 							this.engine.loop = false;
 							this.engine.retrigger = true;
 					} else {
-							console.log("sorry, databaseItem didnt specify a source ", databaseItem);
+							//console.log("sorry, databaseItem didnt specify a source ", databaseItem);
 					}
 			}
 

@@ -303,7 +303,7 @@ var loopsDatabase=[{
     "name": "bass acid",
     "source": "audio/030_OcanClos1Var1_Part01.mp3",
 		"voicen":1,
-		"patn":[6]
+		"patn":[6,5]
 }, {
     "name": "organ super",
     "source": "audio/030_OcanClos1Var1_Part03.mp3",

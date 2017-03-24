@@ -102,7 +102,11 @@ Looper.prototype.setSampler=function(databaseItem){
   var me=this;
   if(databaseItem.hasOwnProperty("source")){
     if(databaseItem.hasOwnProperty("name")){
-      if(this.$.samplerTitle)this.$.samplerTitle.html(databaseItem.name);
+      var titl=databaseItem.name;
+      if(this.$.samplerTitle)this.$.samplerTitle.html(titl);
+      var attrs=titl.split(' ');
+      this.$.main.addClass("inst-"+attrs[0]);
+      this.$.main.addClass("sub-"+attrs[1]);
     }else{
       if(this.$.samplerTitle)this.$.samplerTitle.html(databaseItem.source);
     }

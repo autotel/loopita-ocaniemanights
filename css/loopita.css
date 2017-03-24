@@ -10,10 +10,46 @@ body{
   display:inline-block;
   margin:2px;
   padding:2px;
+  opacity:0.5;
 }
 .looper.playing{
-  background-color: #FDD;
+  opacity: 1 !important;
 }
 .looper.waiting{
-  background-color: #FFD;
+  opacity:0;
+  animation: blink-animation 0.3s steps(2, start) infinite;
+  -webkit-animation: blink-animation 0.3s steps(2, start) infinite;
+}
+@keyframes blink-animation {
+  to {
+    opacity:1;
+  }
+}
+@-webkit-keyframes blink-animation {
+  to {
+    opacity:1
+  }
+}
+
+
+.looper.inst-bass {
+    background-color: #25d8ff;
+}
+
+.looper.sub-hi{
+  opacity: 0.5;
+}
+.looper.sub-lo{}
+.looper.inst-organ {
+    background-color: #973fd4;
+}
+.looper.inst-djembe{
+  background-color: #f8f3d1;
+}
+.looper.inst-hey{
+  background-color: #cb1c1c;
+}
+.looper.inst-kick{}
+.looper.inst-shaker {
+    background-color: #F6F6F6;
 }

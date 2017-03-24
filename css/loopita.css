@@ -1,0 +1,19 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto:400,100,300italic);
+body{
+  font-family: 'Roboto', sans-serif;
+  font-weight: 300;
+  padding:0;
+  margin:0;
+}
+.looper{
+  background-color: #DDD;
+  display:inline-block;
+  margin:2px;
+  padding:2px;
+}
+.looper.playing{
+  background-color: #FDD;
+}
+.looper.waiting{
+  background-color: #FFD;
+}

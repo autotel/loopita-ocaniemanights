@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta charset="utf-8">
+    <title>Loopita</title>
+    <link rel="stylesheet" type="text/css" href="css/mscomponents.css">
+    <link rel="stylesheet" type="text/css" href="css/loopita.css">
+
+    <script src="libs/jquery-3.0.0.min.js"></script>
+    <script src="libs/Tone.js"></script>
+
+    <script src="libs/mscomponents/syncman.js"></script>
+    <script src="libs/mscomponents/jquery.mouse.js"></script>
+    <script src="libs/mscomponents/jquery.slider.js"></script>
+    <script src="libs/mscomponents/jquery.button.js"></script>
+    <script src="libs/mscomponents/jquery.connector.js"></script>
+
+    <script src="js/tone.metronome.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/Looper.js"></script>
+    <script src="js/Rack.js"></script>
+  </head>
+  <body>
+    <div id="listContainer"></div>
+    <div id="loopersContainer"></div>
+    <div id="channelsContainer">
+
+  </div>
+  </body>
+  <script>
+ "use strict";
+ var loopers=[];
+ var effectsRack;
+ var search = getUrlVars()["s"];
+ $(document).ready(function(){
+    if(search){
+      console.log("limiting db results to "+search);
+
+    }
+    for(var a=0;a<loopsDatabase.length;a++){
+      var loadThisOne=true;
+      if(search){
+        if(loopsDatabase[a].name.indexOf(search)==-1){
+          loadThisOne=false;
+        }
+      }
+      if(loadThisOne){var newLoop=new Looper();
+      newLoop.$appendTo($("#loopersContainer"));
+      // console.log(loopsDatabase[a]);
+      newLoop.setSampler(loopsDatabase[a]);
+      loopers.push(newLoop);}
+    }
+    effectsRack=new Rack($("#channelsContainer"));
+    globalTransport.onBeat(function(ev){
+      for(var a in loopers){
+        loopers[a].beat(ev.step/8);
+      }
+    });
+})
+function getUrlVars() {
+  var vars = {};
+  var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+    vars[key] = value.replace("%20"," ");
+  });
+  return vars;
+}
+  </script>
+</html>

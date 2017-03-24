@@ -101,7 +101,11 @@ Looper.prototype.stop=function(){
 Looper.prototype.setSampler=function(databaseItem){
   var me=this;
   if(databaseItem.hasOwnProperty("source")){
-    if(this.$.samplerTitle)this.$.samplerTitle.html(databaseItem.source);
+    if(databaseItem.hasOwnProperty("name")){
+      if(this.$.samplerTitle)this.$.samplerTitle.html(databaseItem.name);
+    }else{
+      if(this.$.samplerTitle)this.$.samplerTitle.html(databaseItem.source);
+    }
     this.engine=new Tone.Player(databaseItem.source,function(a){
       me.terminals={
         // sound:new Connector(me.$.connectorsPanel,{audioNode:me.engine,label:"sound"}),

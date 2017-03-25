@@ -9,6 +9,7 @@
 
     <script src="libs/jquery-3.0.0.min.js"></script>
     <script src="libs/Tone.js"></script>
+    <script src="libs/two.min.js"></script>
 
     <script src="libs/mscomponents/syncman.js"></script>
     <script src="libs/mscomponents/jquery.mouse.js"></script>
@@ -34,6 +35,23 @@
  var search = getUrlVars()["s"];
  var meters=[];
  $(document).ready(function(){
+
+
+   // Make an instance of two and place it on the page.
+   var drawingContainer = document.getElementById('levels-container');
+   var params = { width: 285, height: 200 };
+   var two = new Two(params).appendTo(drawingContainer);
+   function draw() {
+
+     for(var a in meters){
+       //console.log(meters[0].meter.getLevel());
+       meters[a].graph.linewidth = parseFloat(meters[a].meter.getLevel()*128);
+     }
+     two.update();
+     requestAnimationFrame(draw);
+   }
+   requestAnimationFrame(draw);
+
     if(search){
       console.log("limiting db results to "+search);
 
@@ -49,29 +67,41 @@
         var newLoop=new Looper.GuiLoop();
         newLoop.$appendTo($("#loopersContainer"));
 
-        if(!meters.indexOf(newLoop.voicen)){
-          meters.push(new Tone.Meter());
-        }
-        newLoop.engine.connect(meters[newLoop.voicen]);
+
         // console.log(loopsDatabase[a]);
         newLoop.setSampler(loopsDatabase[a]);
         loopers.push(newLoop);
       }
+
     }
+    Looper.onReady(function(){
+      console.log("readycall");
+      this.each(function(){
+        console.log(this.voicen);
+        if(meters.indexOf(this.voicen)==-1){
+          meters[this.voicen]={meter:new Tone.Meter()};
+        }
+        this.engine.connect(meters[this.voicen].meter);
+      });
+      for(var a in meters){
+        var graph=two.makeCircle(10+Math.floor(a/4)*20,10+(a%4)*20,10);
+        graph.fill = '#FF8000';
+        graph.stroke = 'orangered'; // Accepts all valid css color
+        graph.linewidth = 5;
+        meters[a].graph=graph;
+      }
+
+    });
     effectsRack=new Rack($("#channelsContainer"));
     globalTransport.onBeat(function(ev){
       for(var a in loopers){
         loopers[a].beat(ev.step/8);
       }
     });
-    function draw() {
-      for(var a in meters){
-        var val = meter[a].value;
-      }
-      requestAnimationFrame(draw);
-    }
-    requestAnimationFrame(draw);
-})
+
+
+
+});
 function getUrlVars() {
   var vars = {};
   var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {

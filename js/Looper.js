@@ -16,8 +16,24 @@ $(window).on("load", function() {
 		var currentPat=0;
 		var LooperMan=this;
 		var looperList=[];
+		var readyCountDown=0;
+		readyCountOne=function(){
+			readyCountDown--;
+			if(readyCountDown==0){
+				LooperMan.readyCall();
+			}
+		}
 		//pendant: this makes the code very unportable.
 		var availablePats=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16];
+
+		this.readyCall=function(){
+		}
+		this.onReady=function(cb){
+			this.readyCall=function(){
+				cb.call(LooperMan);
+			}
+		}
+
 		this.each=function(cb,filter){
 			if(typeof cb != "function"){
 				console.error("Looper.each callback is not a function",cb);
@@ -115,6 +131,7 @@ $(window).on("load", function() {
 		//var $ = main.jQuery;
 		//console.log($);
 		this.GuiLoop = function() {
+			readyCountDown++;
 			looperList.push(this);
 			//console.log("create looper");
 			var me = this;
@@ -266,6 +283,7 @@ $(window).on("load", function() {
 											var value = bender.data.value * 2;
 											me.engine.playbackRate = (me.playbackRate) * value;
 									});
+									readyCountOne();
 							}).toMaster();
 							this.engine.loop = false;
 							this.engine.retrigger = true;

@@ -374,6 +374,7 @@ var loopsDatabase=[{
 },{
     "name": "trumpet loop",
     "source": "audio/works/tlgen/benjaminharveydesign__rhinoceros-trumpet.wav",
+    "patn":[0,1,2,3,4,5,6],
     "voicen":17
 }
 

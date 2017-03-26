@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - STL</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				color: #fff;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+
+			}
+
+			a { color: skyblue }
+			.button { background:#999; color:#eee; padding:0.2em 0.5em; cursor:pointer }
+			.highlight { background:orange; color:#fff; }
+
+			span {
+				display: inline-block;
+				width: 60px;
+				float: left;
+				text-align: center;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div id="info">
+			<a href="http://threejs.org" target="_blank">three.js</a> -
+			STL loader test by <a href="https://github.com/aleeper">aleeper</a>. PR2 head from <a href="http://www.ros.org/wiki/pr2_description">www.ros.org</a>
+		</div>
+
+		<script src="libs/three.js"></script>
+
+		<script src="libs/three/STLLoader.js"></script>
+
+		<script src="libs/three/Detector.js"></script>
+		<script src="libs/three/stats.min.js"></script>
+
+		<script>
+
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var container, stats;
+			var mouse={x:0,y:0};
+			var camera, cameraTarget, scene, renderer;
+			var objects = [];
+
+			init();
+			animate();
+
+
+			function init() {
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 0.2, 15 );
+				camera.position.set( 3, 0.15, 3 );
+
+				cameraTarget = new THREE.Vector3( 0, -0.25, 0 );
+
+				scene = new THREE.Scene();
+				scene.fog = new THREE.Fog( 0x000000, 2, 15 );
+
+
+				// Ground
+				plane=function(){
+					var plane = new THREE.Mesh(
+						new THREE.PlaneBufferGeometry( 40, 40 ),
+						new THREE.MeshPhongMaterial( { color: 0x999999, specular: 0x101010 } )
+					);
+					plane.rotation.x = -Math.PI/2;
+					plane.position.y = -0.5;
+					scene.add( plane );
+					plane.receiveShadow = true;
+				}
+
+				var Particles=function(){
+					//https://aerotwist.com/tutorials/creating-particles-with-three-js/
+					THREE.Object3D.apply(this, arguments);
+					// create the particle variables
+					var particleCount = 18000,
+					    particles = new THREE.Geometry(),
+					    pMaterial = new THREE.PointsMaterial({
+								color: 0xFFFFFF,
+							  size: 0.03,
+							  map: THREE.ImageUtils.loadTexture(
+							    "images/starparticle.png"
+							  ),
+							  blending: THREE.AdditiveBlending,
+							  transparent: true
+					    });
+
+					// now create the individual particles
+					for (var p = 0; p < particleCount; p++) {
+
+					  // create a particle with random
+					  // position values, -250 -> 250
+					  var pX = (Math.sin((Math.random()-0.5)*Math.PI)) * 2.5,
+					      pY = (Math.cos((Math.random()-0.5)*Math.PI)) * 2.5
+					      pZ = (Math.atan((Math.random()-0.5)*Math.PI)) * 2.5,
+					      particle = new THREE.Vector3(pX, pY, pZ)
+
+					  // add it to the geometry
+					  particles.vertices.push(particle);
+					}
+
+					// create the particle system
+					var particleSystem = new THREE.Points(particles, pMaterial);
+					this.add(particleSystem);
+					scene.add(this);
+				}
+				Particles.prototype = Object.create(THREE.Object3D.prototype);
+				Particles.prototype.constructor = Particles;
+				// ASCII file
+				var Model=function(path,loadCallback){
+					THREE.Object3D.apply(this, arguments);
+					scene.add(this);
+					var loader = new THREE.STLLoader();
+					var mesh = new THREE.Mesh();
+					var thisModel=this;
+					var geometry;
+					this.addMaterialLayer=function(){};
+					loader.load(path, function ( geometry ) {
+						geometry=geometry;
+						//more about stl loading: https://threejs.org/examples/webgl_loader_stl.html
+						var material = new THREE.MeshStandardMaterial( {
+							color: 0x000000, //specular: 0xffffff,
+							metalness: 1, side: THREE.DoubleSide,
+							shading: THREE.FlatShading,
+							blending: THREE.AdditiveBlending,
+							transparent:true
+						} );
+						mesh = new THREE.Mesh( geometry, material );
+						mesh.castShadow = true;
+						mesh.receiveShadow = true;
+						thisModel.add( mesh );
+						thisModel.addMaterialLayer=function(nmaterial){
+							mesh = new THREE.Mesh( geometry, nmaterial );
+							thisModel.add( mesh );
+							return material;
+						}
+						if(loadCallback){loadCallback.call(thisModel)};
+					});
+
+					return this;
+				}
+				var Instrument=function(name){
+					this.model=new THREE.Model('./models'+name+".stl",function(){
+						this.addMaterialLayer(new THREE.MeshBasicMaterial({wireframe:true,color:0xd9f2ff}));
+					});
+
+				}
+				Model.prototype = Object.create(THREE.Object3D.prototype);
+				Model.prototype.constructor = Model;
+				for(var a of [
+					{path:'./models/shaker.stl',scale:0.05,n:0,pos:{x:0,y:0,z:0}},
+					{path:'./models/umbrella.stl',scale:0.1,n:1,pos:{x:-1,y:0,z:0}},
+					{path:'./models/snare.stl',scale:0.1,n:2,pos:{x:1,y:0,z:0}},
+					{path:'./models/bass.stl',scale:0.1,n:3,pos:{x:1,y:0,z:0}},
+					{path:'./models/clap.stl',scale:0.02,n:4,pos:{x:1,y:0,z:0}},
+					{path:'./models/timbal.stl',scale:0.1,n:5,pos:{x:1,y:0,z:0}},
+					{path:'./models/organillo-manilla.stl',n:6,scale:0.1,pos:{x:1,y:0,z:0}},
+					{path:'./models/organillo-cuerpo.stl',n:6,scale:0.1,pos:{x:1,y:0,z:0}},
+				]){
+					nm=new Model(a.path);
+					objects.push(nm);
+					//nm.position.set( a.pos.x, a.pos.y, a.pos.z);
+					nm.position.set(Math.sin(a.n/7.0*Math.PI*2),0,Math.cos(a.n/7.0*Math.PI*2));
+					nm.rotation.set( - Math.PI / 2, 0, 0 );
+					nm.scale.set( a.scale,a.scale,a.scale );
+				}
+				var particle=new Particles();
+				// Lights
+
+				scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+
+				addShadowedLight( 1, 1, 1, 0xffffff, 1.35 );
+				addShadowedLight( 0.5, 1, -1, 0xffaa00, 1 );
+				// renderer
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setClearColor( scene.fog.color );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.renderReverseSided = false;
+
+				container.appendChild( renderer.domElement );
+
+				// stats
+
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function addShadowedLight( x, y, z, color, intensity ) {
+
+				var directionalLight = new THREE.DirectionalLight( color, intensity );
+				directionalLight.position.set( x, y, z );
+				scene.add( directionalLight );
+
+				directionalLight.castShadow = true;
+
+				var d = 1;
+				directionalLight.shadow.camera.left = -d;
+				directionalLight.shadow.camera.right = d;
+				directionalLight.shadow.camera.top = d;
+				directionalLight.shadow.camera.bottom = -d;
+
+				directionalLight.shadow.camera.near = 1;
+				directionalLight.shadow.camera.far = 4;
+
+				directionalLight.shadow.mapSize.width = 1024;
+				directionalLight.shadow.mapSize.height = 1024;
+
+				directionalLight.shadow.bias = -0.005;
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+
+			}
+
+			function render() {
+
+				var timer = Date.now() * 0.0005;
+
+				var hRat= Math.sin( mouse.y/ window.innerHeight)-0.5;
+				var lkat=new THREE.Vector3();
+				lkat.x = Math.cos( mouse.x/ window.innerWidth *Math.PI*2 ) * 1;
+				lkat.y = 0;
+				lkat.z = Math.sin( mouse.x/ window.innerWidth *Math.PI*2 ) * 1;
+				camera.position.x=0;
+				camera.position.y=hRat*3;
+				camera.position.z=0;
+				// camera.position.x = Math.cos(timer)*3
+				// camera.position.z = Math.sin(timer)*3
+				//camera.lookAt( cameraTarget );
+				camera.lookAt(lkat);
+				for(var a of objects){
+					a.rotation.z+=0.002;
+				}
+
+				renderer.render( scene, camera );
+
+			}
+			document.addEventListener("mousemove",function(e){
+				// console.log(e);
+				mouse.x=e.clientX;
+				mouse.y=e.clientY;
+			});
+
+		</script>
+	</body>
+</html>

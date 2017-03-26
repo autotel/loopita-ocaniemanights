@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+underMouse<!DOCTYPE html>
 <html lang="en">
 	<head>
 		<title>three.js webgl - STL</title>
@@ -45,24 +45,29 @@
 		<script src="libs/three.js"></script>
 
 		<script src="libs/three/STLLoader.js"></script>
-
+		<script src="libs/onHandlers.js"></script>
 		<script src="libs/three/Detector.js"></script>
 		<script src="libs/three/stats.min.js"></script>
-
+		<script src="js/mouse.three.js"></script>
+		<script src="js/worldElements.three.js"></script>
+		<script src="js/simpleModelLoader.three.js"></script>
 		<script>
 
 			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 			var container, stats;
-			var mouse={x:0,y:0};
+
 			var camera, cameraTarget, scene, renderer;
 			var objects = [];
+
+
 
 			init();
 			animate();
 
 
 			function init() {
+
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 
@@ -76,116 +81,97 @@
 
 
 				// Ground
-				plane=function(){
-					var plane = new THREE.Mesh(
-						new THREE.PlaneBufferGeometry( 40, 40 ),
-						new THREE.MeshPhongMaterial( { color: 0x999999, specular: 0x101010 } )
-					);
-					plane.rotation.x = -Math.PI/2;
-					plane.position.y = -0.5;
-					scene.add( plane );
-					plane.receiveShadow = true;
-				}
 
-				var Particles=function(){
-					//https://aerotwist.com/tutorials/creating-particles-with-three-js/
-					THREE.Object3D.apply(this, arguments);
-					// create the particle variables
-					var particleCount = 18000,
-					    particles = new THREE.Geometry(),
-					    pMaterial = new THREE.PointsMaterial({
-								color: 0xFFFFFF,
-							  size: 0.03,
-							  map: THREE.ImageUtils.loadTexture(
-							    "images/starparticle.png"
-							  ),
-							  blending: THREE.AdditiveBlending,
-							  transparent: true
-					    });
+				addFloor(0);
 
-					// now create the individual particles
-					for (var p = 0; p < particleCount; p++) {
 
-					  // create a particle with random
-					  // position values, -250 -> 250
-					  var pX = (Math.sin((Math.random()-0.5)*Math.PI)) * 2.5,
-					      pY = (Math.cos((Math.random()-0.5)*Math.PI)) * 2.5
-					      pZ = (Math.atan((Math.random()-0.5)*Math.PI)) * 2.5,
-					      particle = new THREE.Vector3(pX, pY, pZ)
 
-					  // add it to the geometry
-					  particles.vertices.push(particle);
-					}
 
-					// create the particle system
-					var particleSystem = new THREE.Points(particles, pMaterial);
-					this.add(particleSystem);
-					scene.add(this);
-				}
-				Particles.prototype = Object.create(THREE.Object3D.prototype);
-				Particles.prototype.constructor = Particles;
-				// ASCII file
-				var Model=function(path,loadCallback){
-					THREE.Object3D.apply(this, arguments);
-					scene.add(this);
-					var loader = new THREE.STLLoader();
-					var mesh = new THREE.Mesh();
-					var thisModel=this;
-					var geometry;
-					this.addMaterialLayer=function(){};
-					loader.load(path, function ( geometry ) {
-						geometry=geometry;
-						//more about stl loading: https://threejs.org/examples/webgl_loader_stl.html
-						var material = new THREE.MeshStandardMaterial( {
-							color: 0x000000, //specular: 0xffffff,
-							metalness: 1, side: THREE.DoubleSide,
-							shading: THREE.FlatShading,
-							blending: THREE.AdditiveBlending,
-							transparent:true
-						} );
-						mesh = new THREE.Mesh( geometry, material );
-						mesh.castShadow = true;
-						mesh.receiveShadow = true;
-						thisModel.add( mesh );
-						thisModel.addMaterialLayer=function(nmaterial){
-							mesh = new THREE.Mesh( geometry, nmaterial );
-							thisModel.add( mesh );
-							return material;
-						}
-						if(loadCallback){loadCallback.call(thisModel)};
-					});
 
-					return this;
-				}
+
+
 				var Instrument=function(name){
-					this.model=new THREE.Model('./models'+name+".stl",function(){
-						this.addMaterialLayer(new THREE.MeshBasicMaterial({wireframe:true,color:0xd9f2ff}));
+					THREE.Object3D.apply(this, arguments);
+
+
+					scene.add(this);
+					var thisInstrument=this;
+					var light=addShadowedLight( 0,1,0, 0xffffff, 1.35 );
+					thisInstrument.add(light);
+					this.additionalMaterials=[];
+					this.model=new Model('./models/'+name+".stl",function(){
+						this.rotation.set( - Math.PI / 2, 0, 0 );
+						//this.position.set(0,0,0);
+						thisInstrument.additionalMaterials[0]=
+							this.addMaterialLayer(new THREE.MeshBasicMaterial({wireframe:true,transparent:true,color:0xd9f2ff,emissive:0xd9f2ff}));
+
+
+						thisInstrument.add(this);
+
+						//mouse interaction stuff ahead
+
+						var bbox = new THREE.BoxHelper(this.mesh);
+						bbox.material=new THREE.LineBasicMaterial({visible:false});
+
+						this.add(bbox);
+
+						onHandlers.call(bbox);
+
+						bbox.on("mouseenter",function(){
+							console.log("ent");
+							light.intensity=1;
+						});
+						bbox.on("mouseleave",function(){
+							console.log("leave");
+							light.intensity=0;
+						});
+						bbox.on("mousedown",function(){
+							console.log("dn");
+							light.intensity=3;
+							thisInstrument.additionalMaterials[0].opacity=1;
+						});
+						bbox.on("mouseup",function(){
+							console.log("up");
+							light.intensity=1;
+							thisInstrument.additionalMaterials[0].opacity=0;
+						});
+
+
 					});
 
+
+
+
+
 				}
-				Model.prototype = Object.create(THREE.Object3D.prototype);
-				Model.prototype.constructor = Model;
+				Instrument.prototype = Object.create(THREE.Object3D.prototype);
+				Instrument.prototype.constructor = Instrument;
+
 				for(var a of [
-					{path:'./models/shaker.stl',scale:0.05,n:0,pos:{x:0,y:0,z:0}},
-					{path:'./models/umbrella.stl',scale:0.1,n:1,pos:{x:-1,y:0,z:0}},
-					{path:'./models/snare.stl',scale:0.1,n:2,pos:{x:1,y:0,z:0}},
-					{path:'./models/bass.stl',scale:0.1,n:3,pos:{x:1,y:0,z:0}},
-					{path:'./models/clap.stl',scale:0.02,n:4,pos:{x:1,y:0,z:0}},
-					{path:'./models/timbal.stl',scale:0.1,n:5,pos:{x:1,y:0,z:0}},
-					{path:'./models/organillo-manilla.stl',n:6,scale:0.1,pos:{x:1,y:0,z:0}},
-					{path:'./models/organillo-cuerpo.stl',n:6,scale:0.1,pos:{x:1,y:0,z:0}},
+					{name:'shaker',scale:0.05,n:0,pos:{z:0.4}},
+					{name:'umbrella',scale:0.1,n:1,pos:{z:0.4}},
+					{name:'snare',scale:0.1,n:2,pos:{z:0.4}},
+					{name:'bass',scale:0.1,n:3,pos:{z:0.4}},
+					{name:'clap',scale:0.02,n:4,pos:{z:0.4}},
+					{name:'timbal',scale:0.1,n:5,pos:{z:0.4}},
+					{name:'organillo-manilla',n:6,scale:0.1,pos:{z:0.4}},
+					{name:'organillo-cuerpo',n:6,scale:0.1,pos:{z:0.4}},
 				]){
-					nm=new Model(a.path);
+					nm=new Instrument(a.name);
+					nm.props=a;
 					objects.push(nm);
 					//nm.position.set( a.pos.x, a.pos.y, a.pos.z);
-					nm.position.set(Math.sin(a.n/7.0*Math.PI*2),0,Math.cos(a.n/7.0*Math.PI*2));
-					nm.rotation.set( - Math.PI / 2, 0, 0 );
-					nm.scale.set( a.scale,a.scale,a.scale );
+					nm.model.scale.set( a.scale,a.scale,a.scale );
+					nm.position.set(Math.sin(a.n/7.0*Math.PI*2)*2,a.pos.z,Math.cos(a.n/7.0*Math.PI*2)*2);
+					// nm.model.rotation.set( - Math.PI / 2, 0, 0 );
+
 				}
-				var particle=new Particles();
+				// var particle=new StarField();
 				// Lights
 
-				scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+
+				 scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+				// scene.add( helper );
 
 				addShadowedLight( 1, 1, 1, 0xffffff, 1.35 );
 				addShadowedLight( 0.5, 1, -1, 0xffaa00, 1 );
@@ -218,6 +204,9 @@
 			function addShadowedLight( x, y, z, color, intensity ) {
 
 				var directionalLight = new THREE.DirectionalLight( color, intensity );
+				// var helper = new THREE.DirectionalLightHelper( directionalLight, 0.2 );
+				// scene.add( helper );
+
 				directionalLight.position.set( x, y, z );
 				scene.add( directionalLight );
 
@@ -236,7 +225,7 @@
 				directionalLight.shadow.mapSize.height = 1024;
 
 				directionalLight.shadow.bias = -0.005;
-
+				return directionalLight;
 			}
 
 			function onWindowResize() {
@@ -264,27 +253,27 @@
 				var hRat= Math.sin( mouse.y/ window.innerHeight)-0.5;
 				var lkat=new THREE.Vector3();
 				lkat.x = Math.cos( mouse.x/ window.innerWidth *Math.PI*2 ) * 1;
-				lkat.y = 0;
+				lkat.y = 0.5;
 				lkat.z = Math.sin( mouse.x/ window.innerWidth *Math.PI*2 ) * 1;
 				camera.position.x=0;
-				camera.position.y=hRat*3;
+				camera.position.y=hRat*3+1.5;
 				camera.position.z=0;
 				// camera.position.x = Math.cos(timer)*3
 				// camera.position.z = Math.sin(timer)*3
 				//camera.lookAt( cameraTarget );
 				camera.lookAt(lkat);
-				for(var a of objects){
-					a.rotation.z+=0.002;
-				}
+				// for(var a of objects){
+				// 	a.rotation.y+=0.002;
+				// }
+
+
+
+				mouse.raycast();
 
 				renderer.render( scene, camera );
 
 			}
-			document.addEventListener("mousemove",function(e){
-				// console.log(e);
-				mouse.x=e.clientX;
-				mouse.y=e.clientY;
-			});
+
 
 		</script>
 	</body>

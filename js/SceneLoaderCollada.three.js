@@ -1,4 +1,32 @@
-Scenery = function(path) {
+function find(obj,through,property,value,recursion){
+  var rets=[];
+  if(!recursion){
+    var recursion=0;
+    console.log("find objs whose "+property+" is "+value+" recursively through "+through);
+  }
+  var tabbing="";
+  for(var a=0; a<recursion; a++){
+    tabbing+=" ";
+  }
+
+  if(recursion>20){
+    console.log(tabbing+"reached recursion limit here");
+    return false;
+  }else{
+    // if(obj.children){
+    for(var a in obj[through]){
+      console.log(tabbing+"+"+obj[through][a][property]);
+      rets =rets.concat(find(obj[through][a],through,property,value,recursion+1));
+      if(obj[through][a][property].match(value)){
+        console.log(tabbing+" ->returning");
+        rets.push(obj[through][a]);
+      }
+    }
+    // }
+  }
+  return rets;
+}
+Scenery = function(path,loadCallback) {
 	var model;
 	var animations;
 	var kfAnimations = [];
@@ -9,7 +37,7 @@ Scenery = function(path) {
   var scene=worldManager.scene;
   var camera=worldManager.camera;
   var container=worldManager.container;
-
+  var thisScenery=this;
   this.objects = [];
   this.building = [];
   this.instrumentObjects = [];
@@ -35,41 +63,59 @@ Scenery = function(path) {
 			// transparent:true
 		});
 
-
-
-		this.instrumentObjects = find(model, "children", "name", /^inst(Sub)*-.+/i);
-		for (var a of this.objects) {
+		thisScenery.instrumentObjects = find(model, "children", "name", /^inst(Sub)*-.+/i);
+		for (var a of thisScenery.objects) {
 			a.children[0].material = nmaterial;
 		}
 
-
-		this.objects = find(model, "children", "name", /^[decor|pie|inst]*-.+/i);
-		for (var a of this.objects) {
-			a.children[0].castShadow = true;
-			a.children[0].receiveShadow = true;
+    thisScenery.building = find(model, "children", "name", /^building-.+/i);
+		for (var a of thisScenery.building) {
+      a.activateShadow=function(helper){
+        console.log("acrivate shadow of "+a.name);
+  			a.children[0].castShadow = true;
+  			a.children[0].receiveShadow = true;
+      }
 		}
 
-		this.lights = find(model, "children", "name", /^light-.+/i);
-		for (var a of this.lights) {
+    thisScenery.cubes = find(model, "children", "name", /^cube-.+/i);
+		for (var a of thisScenery.cubes) {
+      a.activateShadow=function(helper){
+        console.log("acrivate shadow of "+a.name);
+  			a.children[0].castShadow = true;
+  			a.children[0].receiveShadow = true;
+      }
+		}
+
+		thisScenery.objects = find(model, "children", "name", /^[decor|pie|inst]*-.+/i);
+		for (var a of thisScenery.objects) {
+      a.activateShadow=function(helper){
+  			a.children[0].castShadow = true;
+  			a.children[0].receiveShadow = true;
+      }
+		}
+
+		thisScenery.lights = find(model, "children", "name", /^light-.+/i);
+		for (var a of thisScenery.lights) {
 			console.log(a.children.length)
 			var a_light = a.children[0];
 			console.log(a_light);
-      a_light.activateShadow=function(helper){
-  			this.castShadow = true;
+      a.activateShadow=function(helper){
+  			a_light.castShadow = true;
   			var d = 0.6;
-  			this.shadow.camera.left = -d;
-  			this.shadow.camera.right = d;
-  			this.shadow.camera.top = d;
-  			this.shadow.camera.bottom = -d;
-  			this.shadow.camera.near = 1;
-  			this.shadow.camera.far = 2.3;
-  			this.shadow.mapSize.width = 2048;
-  			this.shadow.mapSize.height = 2048;
-  			this.shadow.bias = -0.002;
+  			a_light.shadow.camera.left = -d;
+  			a_light.shadow.camera.right = d;
+  			a_light.shadow.camera.top = d;
+  			a_light.shadow.camera.bottom = -d;
+  			a_light.shadow.camera.near = 1;
+  			a_light.shadow.camera.far = 2.3;
+  			a_light.shadow.mapSize.width = 1024;
+  			a_light.shadow.mapSize.height = 1024;
+  			a_light.shadow.bias = -0.002;
         if(helper)
-  			scene.add(new THREE.CameraHelper(this.shadow.camera))
+  			scene.add(new THREE.CameraHelper(a_light.shadow.camera))
       }
 		}
+    loadCallback.call(thisScenery);
 	});
 
 	function init() {
@@ -128,18 +174,18 @@ Scenery = function(path) {
 				}
 			}
 			animation.loop = true;
-			animation.play();
+			// animation.play();
 		}
 	}
 
 	function animate(timestamp) {
     // console.log(timestamp);
 		var frameTime = (timestamp - lastTimestamp) * 0.001;
-		if (progress >= 0 && progress < 48) {
+		if (progress >= 0 && progress < 10) {
 			for (var i = 0; i < kfAnimationsLength; ++i) {
 				kfAnimations[i].update(frameTime);
 			}
-		} else if (progress >= 48) {
+		} else if (progress >= 10) {
 			for (var i = 0; i < kfAnimationsLength; ++i) {
 				kfAnimations[i].stop();
 			}

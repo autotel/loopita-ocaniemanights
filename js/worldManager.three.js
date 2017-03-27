@@ -48,14 +48,13 @@ var worldManager=(function(){
 
     renderer.gammaInput = true;
     renderer.gammaOutput = true;
-    var shadow=false;
+    var shadow=true;
     if(shadow){
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.renderReverseSided = false;
 
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       // renderer.shadowMap.enabled = true;
-      // renderer.shadowMap.renderReverseSided = false;
       scene.add(new THREE.AmbientLight(0xffffff, 0.3));
     }
 

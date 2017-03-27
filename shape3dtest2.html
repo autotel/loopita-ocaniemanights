@@ -1,4 +1,4 @@
-underMouse<!DOCTYPE html>
+
 <html lang="en">
 	<head>
 		<title>three.js webgl - STL</title>
@@ -56,11 +56,13 @@ underMouse<!DOCTYPE html>
 		<script src="js/worldElements.three.js"></script>
 		<script src="js/simpleModelLoader.three.js"></script>
 
-		<script src="js/instrument.specific.js"></script>
+		<script src="js/clickable.three.js"></script>
 
 
 
 		<script>
+
+		// console.log(Instrument);
 		var objects=worldManager.objects;
 		var scene=worldManager.scene;
 		var camera=worldManager.camera;
@@ -85,7 +87,8 @@ underMouse<!DOCTYPE html>
 		//       {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
 		//     ]){
 		//       n+=a.n;
-		//       nm=new Instrument(a.name);
+		//     //  nm=new Instrument(a.name);
+		//instrumentCreateFromStl(a.name,function(){
 		//       nm.props=a;
 		//       objects.push(nm);
 		//       //nm.position.set( a.pos.x, a.pos.y, a.pos.z);
@@ -96,8 +99,23 @@ underMouse<!DOCTYPE html>
 		//     }
 		//     // addShadowedLight( 1, 1, 1, 0xffffff, 1.35 );
 		//     // addShadowedLight( 0.5, 1, -1, 0xffaa00, 1 );
-		//
-				scenery=new Scenery('./models/scenery.dae');
+		//});
+				scenery=new Scenery('./models/scenery.dae',function(){
+					console.log(this);
+					for(var a of this.instrumentObjects){
+						console.log(a);
+						objects.push(new Clickable(a));
+					}
+					for(var a of this.cubes){
+						console.log(a);
+						objects.push(new Clickable(a));
+					}
+					//for(var a of this.lights){
+
+					// this.lights[1].activateShadow(true);
+					// this.building[0].children[0].receiveShadow = true;
+					//}
+				});
 		//
 		//
 		});

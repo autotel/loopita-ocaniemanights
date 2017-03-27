@@ -6,6 +6,7 @@ var mouse=(function(){
   var raycaster = new THREE.Raycaster();
   var thisMouse=this;
   raycast=function(){
+    //pendant: there should perhaps be a mouse scene, so the raycaster doesnt have to scan the whole model
     raycaster.setFromCamera( thisMouse.normalized, camera );
     var intersects = raycaster.intersectObjects( scene.children , true);
     if ( intersects.length > 0 ) {
@@ -13,15 +14,24 @@ var mouse=(function(){
         if ( underMouse ) underMouse.handle('mouseleave');
         var thereis=false;
         var search=0;
-        for(search=0;!thereis && search<intersects.length;search++){
+        /*if(intersects[0].object.handle){
+          underMouse=intersects[0].object;
+          underMouse.handle('mouseenter');
+        }else{
+          underMouse=null;
+        }*/
+        for(search=0;(!thereis) && search<intersects.length;search++){
           if(intersects[search].object.handle){
             thereis=search;
           }
         }
         if(thereis){
-          //case where first intersect is object with handler
-          underMouse = intersects[thereis].object;
-          underMouse.handle('mouseenter');
+          // if(underMouse!= intersects[thereis].object){
+            underMouse = intersects[thereis].object;
+            //case where first intersect is object with handler
+            console.log(underMouse);
+            underMouse.handle('mouseenter');
+          // }
         }else{
           //case intersect goes to object with handler to object without
           // console.log(intersects[0].object);

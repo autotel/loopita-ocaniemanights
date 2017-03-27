@@ -57,6 +57,9 @@ var Clickable=function(object){
     // for(var a of ['x','y','z']){
     //   thisClickable.rotForce[a]+=Math.random()*0.005;
     // }
+    console.log(thisClickable.object.instId);
+    console.log(thisClickable.object.parent.instId);
+    console.log(thisClickable.instId);
     thisClickable.soundForce=4;
   });
   bbox.on("mouseup",function(){

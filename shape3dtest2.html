@@ -41,7 +41,9 @@
 		<script src="libs/three.js"></script>
 		<script src="libs/onHandlers.js"></script>
 
-		<script src="js/LooperB.Tone.js"></script>
+		<script src="libs/Tone.js"></script>
+		<script src="js/database.js"></script>
+		<script src="js/LooperB.js"></script>
 
 		<script src="js/worldManager.three.js"></script>
 		<script src="js/SceneLoaderCollada.three.js"></script>
@@ -61,48 +63,59 @@
 
 
 
-		<script>
+<script>
 
-		// console.log(Instrument);
-		var objects=worldManager.objects;
-		var scene=worldManager.scene;
-		var camera=worldManager.camera;
-		var scenery;
+// console.log(Instrument);
+var objects=worldManager.objects;
+var scene=worldManager.scene;
+var camera=worldManager.camera;
+var scenery;
 
-		var currentPat=0;
+var currentPat=0;
 
-		worldManager.onFrame=function(){};
-		worldManager.on('start',function(){
+worldManager.onFrame=function(){};
+worldManager.on('start',function(){
 
-			this.ambientLight=new THREE.AmbientLight(0xffffff, 0);
-      scene.add(this.ambientLight);
+	this.ambientLight=new THREE.AmbientLight(0xffffff, 0);
+  scene.add(this.ambientLight);
 
-			scenery=new Scenery('./models/scenery.dae',function(){
-				// scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
-				console.log(this);
-				for(var a of this.instrumentObjects){
-					// console.log(a);
-					scene.remove(a);
-					objects.push(new Clickable(a));
-				}
-				for(var a of this.cubes){
-					// console.log(a);
-					scene.remove(a);
-					objects.push(new Clickable(a));
-				}
-				for(var a of this.lights){
-					console.log(a);
-					a.children[0].intensity=0;
-				}
-			});
-		//
-		//
-	}).on('render',function(vars){
-
+	scenery=new Scenery('./models/scenery.dae',function(){
+		// scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+		// console.log(this);
+		var test=0;
+		for(var a of this.instrumentObjects){
+			// console.log(a);
+			scene.remove(a);
+			objects.push(new Clickable(a));
+			this.instrumentObjects.instId=test;
+			test++;
+		}
+		for(var a of this.cubes){
+			// console.log(a);
+			scene.remove(a);
+			objects.push(new Clickable(a));
+		}
+		for(var a of this.lights){
+			console.log(a);
+			a.children[0].intensity=0;
+		}
 	});
-		worldManager.start();
+//
+//
+}).on('render',function(vars){
 
+});
+worldManager.start();
+for(var a of loopsDatabase){
+	patchMan.databaseItem(a);
+}
+var instrumentConstructs={};
+var onAllLoaded=function(){
+	instrumentConstructs={
+		"a":worldManager.instrumentObjects[0]
+	}
+}
 
-		</script>
+</script>
 	</body>
 </html>

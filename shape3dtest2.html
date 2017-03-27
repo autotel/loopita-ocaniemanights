@@ -39,10 +39,15 @@ underMouse<!DOCTYPE html>
 	<body>
 		<script src="libs/jquery-3.0.0.min.js"></script>
 		<script src="libs/three.js"></script>
+		<script src="libs/onHandlers.js"></script>
+
 
 		<script src="js/worldManager.three.js"></script>
 		<script src="libs/three/STLLoader.js"></script>
-		<script src="libs/onHandlers.js"></script>
+		<script src="libs/three/ColladaLoader.js"></script>
+		<script src="libs/three/KeyFrameAnimation.js"></script>
+		<script src="libs/three/AnimationHandler.js"></script>
+
 		<script src="libs/three/Detector.js"></script>
 		<script src="libs/three/stats.min.js"></script>
 		<script src="js/mouse.three.js"></script>
@@ -58,9 +63,9 @@ underMouse<!DOCTYPE html>
 		var objects = [];
 		var scene;
 		var camera;
-		var myWorld=new WorldManager();
-		myWorld.onFrame=function(){};
-		myWorld.onSetup=function(){
+
+		worldManager.onFrame=function(){};
+		worldManager.onSetup=function(){
 		    addFloor(0);
 		    var n=6;
 		    for(var a of [
@@ -94,7 +99,7 @@ underMouse<!DOCTYPE html>
 
 
 		};
-		myWorld.start();
+		worldManager.start();
 
 
 		</script>

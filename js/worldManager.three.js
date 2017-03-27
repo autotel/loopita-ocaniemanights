@@ -25,9 +25,18 @@ var worldManager=(function(){
   function init() {
     container = document.createElement( 'div' );
     document.body.appendChild( container );
-    camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 0.2, 15 );
-    camera.position.set( 3, 0.15, 3 );
-    cameraTarget = new THREE.Vector3( 0, -0.25, 0 );
+
+    // camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 0.2, 15 );
+    // camera.position.set( 3, 0.15, 3 );
+    // cameraTarget = new THREE.Vector3( 0, -0.25, 0 );
+
+
+    camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.01, 1000 );
+    camera.position.set( 2.6,1,0 );
+    camera.lookAt( new THREE.Vector3( 0,0.4,0 ) );
+
+
+
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog( 0x000000, 2, 15 );
     scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
@@ -39,15 +48,16 @@ var worldManager=(function(){
 
     renderer.gammaInput = true;
     renderer.gammaOutput = true;
+    var shadow=false;
+    if(shadow){
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.renderReverseSided = false;
 
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.renderReverseSided = false;
-
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    // renderer.shadowMap.enabled = true;
-    // renderer.shadowMap.renderReverseSided = false;
-    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      // renderer.shadowMap.enabled = true;
+      // renderer.shadowMap.renderReverseSided = false;
+      scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+    }
 
     container.appendChild( renderer.domElement );
 

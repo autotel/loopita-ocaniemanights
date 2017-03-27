@@ -9,11 +9,13 @@ Scenery = function(path) {
   var scene=worldManager.scene;
   var camera=worldManager.camera;
   var container=worldManager.container;
-  var objects = [];
-  var scenery = [];
-  var instrumentObjects = [];
-  var lights = [];
-	loader.load('./models/scenery.dae', function(collada) {
+
+  this.objects = [];
+  this.building = [];
+  this.instrumentObjects = [];
+  this.lights = [];
+
+	loader.load(path, function(collada) {
 		console.log("loaded", collada);
 		model = collada.scene;
 		model.rotation.x = Math.PI / -2;
@@ -32,32 +34,41 @@ Scenery = function(path) {
 			// blending: THREE.AdditiveBlending,
 			// transparent:true
 		});
-		var meshes = find(model, "children", "name", /^inst(Sub)*-.+/i);
-		for (var a of meshes) {
+
+
+
+		this.instrumentObjects = find(model, "children", "name", /^inst(Sub)*-.+/i);
+		for (var a of this.objects) {
 			a.children[0].material = nmaterial;
 		}
-		meshes = find(model, "children", "name", /^[decor|pie|inst]*-.+/i);
-		for (var a of meshes) {
+
+
+		this.objects = find(model, "children", "name", /^[decor|pie|inst]*-.+/i);
+		for (var a of this.objects) {
 			a.children[0].castShadow = true;
 			a.children[0].receiveShadow = true;
 		}
-		var lights = find(model, "children", "name", /.*-shadow$/i);
-		for (var a of lights) {
+
+		this.lights = find(model, "children", "name", /^light-.+/i);
+		for (var a of this.lights) {
 			console.log(a.children.length)
-			shadowLight = a.children[0];
-			console.log(shadowLight);
-			shadowLight.castShadow = true;
-			var d = 0.6;
-			shadowLight.shadow.camera.left = -d;
-			shadowLight.shadow.camera.right = d;
-			shadowLight.shadow.camera.top = d;
-			shadowLight.shadow.camera.bottom = -d;
-			shadowLight.shadow.camera.near = 1;
-			shadowLight.shadow.camera.far = 2.3;
-			shadowLight.shadow.mapSize.width = 2048;
-			shadowLight.shadow.mapSize.height = 2048;
-			shadowLight.shadow.bias = -0.002;
-			scene.add(new THREE.CameraHelper(shadowLight.shadow.camera))
+			var a_light = a.children[0];
+			console.log(a_light);
+      a_light.activateShadow=function(helper){
+  			this.castShadow = true;
+  			var d = 0.6;
+  			this.shadow.camera.left = -d;
+  			this.shadow.camera.right = d;
+  			this.shadow.camera.top = d;
+  			this.shadow.camera.bottom = -d;
+  			this.shadow.camera.near = 1;
+  			this.shadow.camera.far = 2.3;
+  			this.shadow.mapSize.width = 2048;
+  			this.shadow.mapSize.height = 2048;
+  			this.shadow.bias = -0.002;
+        if(helper)
+  			scene.add(new THREE.CameraHelper(this.shadow.camera))
+      }
 		}
 	});
 
@@ -116,12 +127,13 @@ Scenery = function(path) {
 					obj.matrixWorldNeedsUpdate = true;
 				}
 			}
-			animation.loop = false;
+			animation.loop = true;
 			animation.play();
 		}
 	}
 
 	function animate(timestamp) {
+    // console.log(timestamp);
 		var frameTime = (timestamp - lastTimestamp) * 0.001;
 		if (progress >= 0 && progress < 48) {
 			for (var i = 0; i < kfAnimationsLength; ++i) {

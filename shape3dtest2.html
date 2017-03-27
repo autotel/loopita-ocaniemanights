@@ -37,13 +37,10 @@ underMouse<!DOCTYPE html>
 		</style>
 	</head>
 	<body>
-		<div id="info">
-			<a href="http://threejs.org" target="_blank">three.js</a> -
-			STL loader test by <a href="https://github.com/aleeper">aleeper</a>. PR2 head from <a href="http://www.ros.org/wiki/pr2_description">www.ros.org</a>
-		</div>
-
+		<script src="libs/jquery-3.0.0.min.js"></script>
 		<script src="libs/three.js"></script>
 
+		<script src="js/worldManager.three.js"></script>
 		<script src="libs/three/STLLoader.js"></script>
 		<script src="libs/onHandlers.js"></script>
 		<script src="libs/three/Detector.js"></script>
@@ -51,228 +48,53 @@ underMouse<!DOCTYPE html>
 		<script src="js/mouse.three.js"></script>
 		<script src="js/worldElements.three.js"></script>
 		<script src="js/simpleModelLoader.three.js"></script>
+
+		<script src="js/instrument.specific.js"></script>
+
+
+
 		<script>
 
-			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-
-			var container, stats;
-
-			var camera, cameraTarget, scene, renderer;
-			var objects = [];
-
-
-
-			init();
-			animate();
-
-
-			function init() {
-
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
-
-				camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 0.2, 15 );
-				camera.position.set( 3, 0.15, 3 );
-
-				cameraTarget = new THREE.Vector3( 0, -0.25, 0 );
-
-				scene = new THREE.Scene();
-				scene.fog = new THREE.Fog( 0x000000, 2, 15 );
-
-
-				// Ground
-
-				addFloor(0);
-
-
-
-
-
-
-
-				var Instrument=function(name){
-					THREE.Object3D.apply(this, arguments);
-
-
-					scene.add(this);
-					var thisInstrument=this;
-					var light=addShadowedLight( 0,1,0, 0xffffff, 1.35 );
-					thisInstrument.add(light);
-					this.additionalMaterials=[];
-					this.model=new Model('./models/'+name+".stl",function(){
-						this.rotation.set( - Math.PI / 2, 0, 0 );
-						//this.position.set(0,0,0);
-						thisInstrument.additionalMaterials[0]=
-							this.addMaterialLayer(new THREE.MeshBasicMaterial({wireframe:true,transparent:true,color:0xd9f2ff,emissive:0xd9f2ff}));
-
-
-						thisInstrument.add(this);
-
-						//mouse interaction stuff ahead
-
-						var bbox = new THREE.BoxHelper(this.mesh);
-						bbox.material=new THREE.LineBasicMaterial({visible:false});
-
-						this.add(bbox);
-
-						onHandlers.call(bbox);
-
-						bbox.on("mouseenter",function(){
-							console.log("ent");
-							light.intensity=1;
-						});
-						bbox.on("mouseleave",function(){
-							console.log("leave");
-							light.intensity=0;
-						});
-						bbox.on("mousedown",function(){
-							console.log("dn");
-							light.intensity=3;
-							thisInstrument.additionalMaterials[0].opacity=1;
-						});
-						bbox.on("mouseup",function(){
-							console.log("up");
-							light.intensity=1;
-							thisInstrument.additionalMaterials[0].opacity=0;
-						});
-
-
-					});
-
-
-
-
-
-				}
-				Instrument.prototype = Object.create(THREE.Object3D.prototype);
-				Instrument.prototype.constructor = Instrument;
-
-				for(var a of [
-					{name:'shaker',scale:0.05,n:0,pos:{z:0.4}},
-					{name:'umbrella',scale:0.1,n:1,pos:{z:0.4}},
-					{name:'snare',scale:0.1,n:2,pos:{z:0.4}},
-					{name:'bass',scale:0.1,n:3,pos:{z:0.4}},
-					{name:'clap',scale:0.02,n:4,pos:{z:0.4}},
-					{name:'timbal',scale:0.1,n:5,pos:{z:0.4}},
-					{name:'organillo-manilla',n:6,scale:0.1,pos:{z:0.4}},
-					{name:'organillo-cuerpo',n:6,scale:0.1,pos:{z:0.4}},
-				]){
-					nm=new Instrument(a.name);
-					nm.props=a;
-					objects.push(nm);
-					//nm.position.set( a.pos.x, a.pos.y, a.pos.z);
-					nm.model.scale.set( a.scale,a.scale,a.scale );
-					nm.position.set(Math.sin(a.n/7.0*Math.PI*2)*2,a.pos.z,Math.cos(a.n/7.0*Math.PI*2)*2);
-					// nm.model.rotation.set( - Math.PI / 2, 0, 0 );
-
-				}
-				// var particle=new StarField();
-				// Lights
-
-
-				 scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
-				// scene.add( helper );
-
-				addShadowedLight( 1, 1, 1, 0xffffff, 1.35 );
-				addShadowedLight( 0.5, 1, -1, 0xffaa00, 1 );
-				// renderer
-
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setClearColor( scene.fog.color );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-				renderer.gammaInput = true;
-				renderer.gammaOutput = true;
-
-				renderer.shadowMap.enabled = true;
-				renderer.shadowMap.renderReverseSided = false;
-
-				container.appendChild( renderer.domElement );
-
-				// stats
-
-				stats = new Stats();
-				container.appendChild( stats.dom );
-
-				//
-
-				window.addEventListener( 'resize', onWindowResize, false );
-
-			}
-
-			function addShadowedLight( x, y, z, color, intensity ) {
-
-				var directionalLight = new THREE.DirectionalLight( color, intensity );
-				// var helper = new THREE.DirectionalLightHelper( directionalLight, 0.2 );
-				// scene.add( helper );
-
-				directionalLight.position.set( x, y, z );
-				scene.add( directionalLight );
-
-				directionalLight.castShadow = true;
-
-				var d = 1;
-				directionalLight.shadow.camera.left = -d;
-				directionalLight.shadow.camera.right = d;
-				directionalLight.shadow.camera.top = d;
-				directionalLight.shadow.camera.bottom = -d;
-
-				directionalLight.shadow.camera.near = 1;
-				directionalLight.shadow.camera.far = 4;
-
-				directionalLight.shadow.mapSize.width = 1024;
-				directionalLight.shadow.mapSize.height = 1024;
-
-				directionalLight.shadow.bias = -0.005;
-				return directionalLight;
-			}
-
-			function onWindowResize() {
-
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-			}
-
-			function animate() {
-
-				requestAnimationFrame( animate );
-
-				render();
-				stats.update();
-
-			}
-
-			function render() {
-
-				var timer = Date.now() * 0.0005;
-
-				var hRat= Math.sin( mouse.y/ window.innerHeight)-0.5;
-				var lkat=new THREE.Vector3();
-				lkat.x = Math.cos( mouse.x/ window.innerWidth *Math.PI*2 ) * 1;
-				lkat.y = 0.5;
-				lkat.z = Math.sin( mouse.x/ window.innerWidth *Math.PI*2 ) * 1;
-				camera.position.x=0;
-				camera.position.y=hRat*3+1.5;
-				camera.position.z=0;
-				// camera.position.x = Math.cos(timer)*3
-				// camera.position.z = Math.sin(timer)*3
-				//camera.lookAt( cameraTarget );
-				camera.lookAt(lkat);
-				// for(var a of objects){
-				// 	a.rotation.y+=0.002;
-				// }
-
-
-
-				mouse.raycast();
-
-				renderer.render( scene, camera );
-
-			}
+		var objects = [];
+		var scene;
+		var camera;
+		var myWorld=new WorldManager();
+		myWorld.onFrame=function(){};
+		myWorld.onSetup=function(){
+		    addFloor(0);
+		    var n=6;
+		    for(var a of [
+		      {name:'shaker',scale:0.05,n:+1,pos:{z:0.4}},
+					{name:'shaker',scale:0.05,n:+0.25,pos:{z:0.4}},
+		      {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
+		      {name:'snare',scale:0.1,n:+1,pos:{z:0.4}},
+		      {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
+		      {name:'bass',scale:0.1,n:+1,pos:{z:0.4}},
+		      {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
+		      {name:'clap',scale:0.02,n:+1,pos:{z:0.4}},
+		      {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
+		      {name:'timbal',scale:0.1,n:+1,pos:{z:0.4}},
+		      {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
+		      {name:'organillo-manilla',n:+1,scale:0.1,pos:{z:0.4}},
+		      {name:'organillo-cuerpo',n:+0,scale:0.1,pos:{z:0.4}},
+		      {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
+		    ]){
+		      n+=a.n;
+		      nm=new Instrument(a.name);
+		      nm.props=a;
+		      objects.push(nm);
+		      //nm.position.set( a.pos.x, a.pos.y, a.pos.z);
+		      nm.model.scale.set( a.scale,a.scale,a.scale );
+		      nm.position.set(Math.sin(n/26.0*Math.PI*2)*2,a.pos.z,Math.cos(n/26.0*Math.PI*2)*2);
+		      // nm.model.rotation.set( - Math.PI / 2, 0, 0 );
+
+		    }
+		    addShadowedLight( 1, 1, 1, 0xffffff, 1.35 );
+		    addShadowedLight( 0.5, 1, -1, 0xffaa00, 1 );
+
+
+		};
+		myWorld.start();
 
 
 		</script>

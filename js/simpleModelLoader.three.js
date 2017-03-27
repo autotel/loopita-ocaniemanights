@@ -1,13 +1,28 @@
 // ASCII file
 var Model=function(path,loadCallback){
   THREE.Object3D.apply(this, arguments);
-  var loader = new THREE.STLLoader();
   this.mesh = new THREE.Mesh();
-  var thisModel=this;
-  var geometry;
+  this.geometry;
   this.addMaterialLayer=function(){};
+  var thisModel=this;
+  //get file extension and choose loading mode accordingly
+  var extension=path.match(/\.\w*$/);
+  console.log("loading model in "+extension+" mode");
+  //pendant: proper loading management
+  if(extension==".stl"){
+    StlModel.call(this,arguments);
+  }else{
+    console.log("I don't know how to load this model format");
+  }
+  return this;
+}
+var StlModel=function(args){
+  var path=args[0];
+  var loadCallback=args[1];
+  var thisModel=this;
+  var loader = new THREE.STLLoader();
   loader.load(path, function ( geometry ) {
-    geometry=geometry;
+    thisModel.geometry=geometry;
     //more about stl loading: https://threejs.org/examples/webgl_loader_stl.html
     var material = new THREE.MeshStandardMaterial( {
       color: 0x000000, //specular: 0xffffff,
@@ -21,7 +36,6 @@ var Model=function(path,loadCallback){
     mesh.receiveShadow = true;
 
 
-
     thisModel.mesh=mesh;
     thisModel.add( mesh );
     thisModel.addMaterialLayer=function(nmaterial){
@@ -31,8 +45,6 @@ var Model=function(path,loadCallback){
     }
     if(loadCallback){loadCallback.call(thisModel)};
   });
-
-  return this;
 }
 Model.prototype = Object.create(THREE.Object3D.prototype);
 Model.prototype.constructor = Model;

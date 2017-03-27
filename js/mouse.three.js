@@ -29,7 +29,7 @@ var mouse=(function(){
           // if(underMouse!= intersects[thereis].object){
             underMouse = intersects[thereis].object;
             //case where first intersect is object with handler
-            console.log(underMouse);
+            // console.log(underMouse);
             underMouse.handle('mouseenter');
           // }
         }else{

@@ -12,6 +12,8 @@ var worldManager=(function(){
   this.scene=scene;
   this.camera=camera;
 
+
+
   this.onSetup=function(){};
   this.onRender=function(){};
   var container;
@@ -39,7 +41,7 @@ var worldManager=(function(){
 
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog( 0x000000, 2, 15 );
-    scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+
     renderer = new THREE.WebGLRenderer( { antialias: true } );
 
     renderer.setClearColor( scene.fog.color );
@@ -55,7 +57,7 @@ var worldManager=(function(){
 
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       // renderer.shadowMap.enabled = true;
-      scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+
     }
 
     container.appendChild( renderer.domElement );
@@ -84,6 +86,9 @@ var worldManager=(function(){
     // camera.position.y=vRat+0.6;
     // camera.position.z=0;
     // camera.lookAt(lkat);
+    if(currentPat==0)
+    camera.lookAt(new THREE.Vector3(0, 0.6, 0));
+    if(currentPat>0)
     camera.lookAt(new THREE.Vector3(-mouse.normalized.y * 2, 0.6, -mouse.normalized.x));
 
     mouse.raycast();

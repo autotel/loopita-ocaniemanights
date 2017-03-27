@@ -46,13 +46,17 @@ Scenery = function(path,loadCallback) {
 	loader.load(path, function(collada) {
 		console.log("loaded", collada);
 		model = collada.scene;
+    thisScenery.model=model;
 		model.rotation.x = Math.PI / -2;
+    model.scale.x = model.scale.y = model.scale.z = 0.125; // 1/8 scale, modeled in cm
 		animations = collada.animations;
 		kfAnimationsLength = animations.length;
-		model.scale.x = model.scale.y = model.scale.z = 0.125; // 1/8 scale, modeled in cm
 		init();
 		start();
 		animate(lastTimestamp);
+
+    // model.updateMatrix();
+
     worldManager.on('render',function(a){animate(a.time);});
 		var nmaterial = new THREE.MeshStandardMaterial({
 			color: 0x000000, //specular: 0xffffff,
@@ -136,6 +140,8 @@ Scenery = function(path,loadCallback) {
 		// var floor = -0.04,
 		// 	step = 1,
 		// 	size = 14;
+    // model.updateMatrix();
+    // model.updateProjectionMatrix();
 		scene.add(model);
 		// Lights
 		// pointLight = new THREE.PointLight(0xffffff, 0.1);

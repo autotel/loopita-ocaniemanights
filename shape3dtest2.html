@@ -41,6 +41,7 @@
 		<script src="libs/three.js"></script>
 		<script src="libs/onHandlers.js"></script>
 
+		<script src="js/LooperB.Tone.js"></script>
 
 		<script src="js/worldManager.three.js"></script>
 		<script src="js/SceneLoaderCollada.three.js"></script>
@@ -67,58 +68,38 @@
 		var scene=worldManager.scene;
 		var camera=worldManager.camera;
 		var scenery;
+
+		var currentPat=0;
+
 		worldManager.onFrame=function(){};
 		worldManager.on('start',function(){
-		//     // addFloor.call(worldManager.scene,0);
-		//     var n=13;
-		//     for(var a of [
-		//       {name:'shaker',scale:0.05,n:+1,pos:{z:0.4}},
-		// 			{name:'shaker',scale:0.05,n:+0.25,pos:{z:0.4}},
-		//       {name:'snare',scale:0.1,n:+1,pos:{z:0.4}},
-		//       {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
-		//       {name:'bass',scale:0.1,n:+1,pos:{z:0.4}},
-		//       {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
-		//       {name:'clap',scale:0.02,n:+1,pos:{z:0.4}},
-		//       {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
-		//       {name:'timbal',scale:0.1,n:+1,pos:{z:0.4}},
-		//       {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
-		//       {name:'organillo-manilla',n:+1,scale:0.1,pos:{z:0.4}},
-		//       {name:'organillo-cuerpo',n:+0,scale:0.1,pos:{z:0.4}},
-		//       {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
-		//     ]){
-		//       n+=a.n;
-		//     //  nm=new Instrument(a.name);
-		//instrumentCreateFromStl(a.name,function(){
-		//       nm.props=a;
-		//       objects.push(nm);
-		//       //nm.position.set( a.pos.x, a.pos.y, a.pos.z);
-		//       nm.model.scale.set( a.scale*2,a.scale*2,a.scale*2 );
-		//       nm.position.set(Math.sin(n/26.0*Math.PI*2)*2,a.pos.z,Math.cos(n/26.0*Math.PI*2)*2);
-		//       // nm.model.rotation.set( - Math.PI / 2, 0, 0 );
-		//
-		//     }
-		//     // addShadowedLight( 1, 1, 1, 0xffffff, 1.35 );
-		//     // addShadowedLight( 0.5, 1, -1, 0xffaa00, 1 );
-		//});
-				scenery=new Scenery('./models/scenery.dae',function(){
-					console.log(this);
-					for(var a of this.instrumentObjects){
-						console.log(a);
-						objects.push(new Clickable(a));
-					}
-					for(var a of this.cubes){
-						console.log(a);
-						objects.push(new Clickable(a));
-					}
-					//for(var a of this.lights){
 
-					// this.lights[1].activateShadow(true);
-					// this.building[0].children[0].receiveShadow = true;
-					//}
-				});
+			this.ambientLight=new THREE.AmbientLight(0xffffff, 0);
+      scene.add(this.ambientLight);
+
+			scenery=new Scenery('./models/scenery.dae',function(){
+				// scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+				console.log(this);
+				for(var a of this.instrumentObjects){
+					// console.log(a);
+					scene.remove(a);
+					objects.push(new Clickable(a));
+				}
+				for(var a of this.cubes){
+					// console.log(a);
+					scene.remove(a);
+					objects.push(new Clickable(a));
+				}
+				for(var a of this.lights){
+					console.log(a);
+					a.children[0].intensity=0;
+				}
+			});
 		//
 		//
-		});
+	}).on('render',function(vars){
+
+	});
 		worldManager.start();
 
 

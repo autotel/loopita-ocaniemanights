@@ -20,6 +20,7 @@ onHandlers=function(){
     } else {
       throw ("error at mouse.on, provided callback that is not a function");
     }
+    return this;
   }
   this.off = function(name) {
     var name = name.split(".");

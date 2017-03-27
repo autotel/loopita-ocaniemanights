@@ -43,6 +43,7 @@ underMouse<!DOCTYPE html>
 
 
 		<script src="js/worldManager.three.js"></script>
+		<script src="js/SceneLoaderCollada.three.js"></script>
 		<script src="libs/three/STLLoader.js"></script>
 		<script src="libs/three/ColladaLoader.js"></script>
 		<script src="libs/three/KeyFrameAnimation.js"></script>
@@ -62,7 +63,7 @@ underMouse<!DOCTYPE html>
 		var objects=worldManager.objects;
 		var scene=worldManager.scene;
 		var camera=worldManager.camera;
-
+		var scenery;
 		worldManager.onFrame=function(){};
 		worldManager.on('start',function(){
 		    // addFloor.call(worldManager.scene,0);
@@ -94,6 +95,8 @@ underMouse<!DOCTYPE html>
 		    }
 		    addShadowedLight( 1, 1, 1, 0xffffff, 1.35 );
 		    addShadowedLight( 0.5, 1, -1, 0xffaa00, 1 );
+
+				scenery=new Scenery();
 
 
 		});

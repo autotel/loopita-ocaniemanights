@@ -129,34 +129,32 @@ var DaeModel=function(args){
       kfAnimations.push( kfAnimation );
     }
 
+    thisModel.add( model );
+
     thisModel.addMaterialLayer=function(nmaterial){
       for(var a in mesh){
-        mesh[a].material=nmaterial;
-        thisModel.add( mesh[a] );
-        return nmaterial;
+        //mesh[a].material=nmaterial;
       }
+      return nmaterial;
     }
 
-    start();
-    animate( lastTimestamp );
+    initAnimation();
+
     if(loadCallback){loadCallback.call(thisModel)};
 
   } );
 
-  function start() {
+  function initAnimation() {
+
 
     for ( var i = 0; i < kfAnimationsLength; ++i ) {
-
+      console.log("anim"+i);
       var animation = kfAnimations[i];
-
       for ( var h = 0, hl = animation.hierarchy.length; h < hl; h++ ) {
-
         var keys = animation.data.hierarchy[ h ].keys;
         var sids = animation.data.hierarchy[ h ].sids;
         var obj = animation.hierarchy[ h ];
-
         if ( keys.length && sids ) {
-
           for ( var s = 0; s < sids.length; s++ ) {
 
             var sid = sids[ s ];
@@ -182,20 +180,27 @@ var DaeModel=function(args){
   }
 
   this.udpateAnimation=function(timestamp){
+
     var frameTime = ( timestamp - lastTimestamp ) * 0.001;
-    if ( progress >= 0 && progress < 48 ) {
+
+    if ( progress >= 0 && progress < 20 ) {
       for ( var i = 0; i < kfAnimationsLength; ++i ) {
+        // console.log("animation:"+i);
         kfAnimations[ i ].update( frameTime );
       }
-    } else if ( progress >= 48 ) {
+    } else if ( progress >= 20 ) {
       for ( var i = 0; i < kfAnimationsLength; ++i ) {
         kfAnimations[ i ].stop();
       }
       progress = 0;
-      start();
+      // start();
     }
     // pointLight.position.copy( camera.position );
     progress += frameTime;
     lastTimestamp = timestamp;
   };
+  worldManager.on('render',function(vars){
+    console.log("anim");
+    thisModel.udpateAnimation(vars.time);
+  });
 }

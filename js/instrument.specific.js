@@ -5,7 +5,7 @@ var Instrument=function(name){
   var light=addShadowedLight( 0,1,0, 0xffffff, 1.35 );
   thisInstrument.add(light);
   this.additionalMaterials=[];
-  this.model=new Model('./models/'+name+".dae",function(){
+  this.model=new Model('./models/'+name+".stl",function(){
     this.rotation.set( - Math.PI / 2, 0, 0 );
     //this.position.set(0,0,0);
     thisInstrument.additionalMaterials[0]=this.addMaterialLayer(new THREE.MeshBasicMaterial({wireframe:true,transparent:true,color:0xd9f2ff,emissive:0xd9f2ff}));

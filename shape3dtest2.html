@@ -59,19 +59,17 @@ underMouse<!DOCTYPE html>
 
 
 		<script>
-
-		var objects = [];
-		var scene;
-		var camera;
+		var objects=worldManager.objects;
+		var scene=worldManager.scene;
+		var camera=worldManager.camera;
 
 		worldManager.onFrame=function(){};
-		worldManager.onSetup=function(){
-		    addFloor(0);
+		worldManager.on('start',function(){
+		    // addFloor.call(worldManager.scene,0);
 		    var n=6;
 		    for(var a of [
 		      {name:'shaker',scale:0.05,n:+1,pos:{z:0.4}},
 					{name:'shaker',scale:0.05,n:+0.25,pos:{z:0.4}},
-		      {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
 		      {name:'snare',scale:0.1,n:+1,pos:{z:0.4}},
 		      {name:'umbrella',scale:0.1,n:+1,pos:{z:0.4}},
 		      {name:'bass',scale:0.1,n:+1,pos:{z:0.4}},
@@ -98,7 +96,7 @@ underMouse<!DOCTYPE html>
 		    addShadowedLight( 0.5, 1, -1, 0xffaa00, 1 );
 
 
-		};
+		});
 		worldManager.start();
 
 

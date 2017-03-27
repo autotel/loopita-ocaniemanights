@@ -5,7 +5,7 @@ addFloor=function(h){
   );
   plane.rotation.x = -Math.PI/2;
   plane.position.y = h;
-  scene.add( plane );
+  this.add( plane );
   plane.receiveShadow = true;
 }
 

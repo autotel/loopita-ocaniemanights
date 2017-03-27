@@ -1,15 +1,26 @@
 var worldManager=(function(){
   onHandlers.call(this);
+
+  var objects = [];
+  var scene={};
+  var camera={};
+  var thisWorldManager=this;
+
+  init();
+
+  this.objects=objects;
+  this.scene=scene;
+  this.camera=camera;
+
   this.onSetup=function(){};
   this.onRender=function(){};
-  var thisWorldManager=this;
   var container;
   var cameraTarget;
   var renderer;
   this.start=function(){
-  	if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-  	init();
-  	animate();
+    thisWorldManager.handle('start');
+    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+    animate();
   }
   function init() {
     container = document.createElement( 'div' );
@@ -35,7 +46,7 @@ var worldManager=(function(){
 
 
     window.addEventListener( 'resize', onWindowResize, false );
-    thisWorldManager.onSetup.call(thisWorldManager,{renderer:renderer,container:container,});
+    thisWorldManager.handle("setup",{renderer:renderer,container:container});
   }
   function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -48,18 +59,18 @@ var worldManager=(function(){
   }
   function render() {
     var timer = Date.now() * 0.0005;
-    var hRat= ( mouse.y/ window.innerHeight)-0.5;
+    var vRat= 0.5-(( mouse.y/ window.innerHeight));
     var lkat=new THREE.Vector3();
     lkat.x = Math.cos( mouse.x/ window.innerWidth *Math.PI*2 ) * 1;
-    lkat.y = hRat*3+0.6;
+    lkat.y = vRat*3+0.6;
     lkat.z = Math.sin( mouse.x/ window.innerWidth *Math.PI*2 ) * 1;
     camera.position.x=0;
-    camera.position.y=hRat+0.6;
+    camera.position.y=vRat+0.6;
     camera.position.z=0;
     camera.lookAt(lkat);
     mouse.raycast();
     renderer.render( scene, camera );
-    this.handle('render',{timer:timer,camera:camera,scene:scene});
+    this.handle('render',{time:timer,camera:camera,scene:scene});
     thisWorldManager.onRender.call(thisWorldManager,timer);
   }
   return this;

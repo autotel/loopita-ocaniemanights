@@ -1,7 +1,7 @@
 var mouse=(function(){
-  this.x=0;
-  this.y=0;
-  this.normalized=new THREE.Vector2(0,0);
+  this.x=-4;
+  this.y=-4;
+  this.normalized=new THREE.Vector2(-4,-4);
   var underMouse;
   var raycaster = new THREE.Raycaster();
   var thisMouse=this;

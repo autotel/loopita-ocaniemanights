@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <ul id="projlist"></ul>
+  </body>
+  <script src="libs/jquery-3.0.0.min.js"></script>
+  <script src="js/database.js"></script>
+  <script type="text/javascript">
+  var prev="";
+  for(var a=0;a<loopsDatabase.length;a++){
+    var proj=loopsDatabase[a].name.split("_")[1];
+    console.log(proj);
+    if(proj!=prev){
+      $("#projlist").append('<li><a href="looper.html?s='+proj+'">'+proj+'</a><br>');
+      prev=proj;
+    }
+  }
+  </script>
+</html>

@@ -49,6 +49,7 @@ Scenery = function(path,loadCallback) {
     thisScenery.model=model;
 		model.rotation.x = Math.PI / -2;
     model.scale.x = model.scale.y = model.scale.z = 0.125; // 1/8 scale, modeled in cm
+    console.log("model scaled and rotated");
 		animations = collada.animations;
 		kfAnimationsLength = animations.length;
 		init();

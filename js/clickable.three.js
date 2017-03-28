@@ -1,12 +1,12 @@
 var Clickable=function(object){
+  console.log("clickable created",object.name)
   THREE.Object3D.apply(this, arguments);
   this.force=new THREE.Vector3(0,0,0);
   this.rotForce=new THREE.Vector3(0,0,0);
-  this.soundForce=0;
   this.object=object;
   this.meshes=find(this.object,"children","type","Mesh");
   this.mesh=this.meshes[0];
-  thisClickable=this;
+  this.isHover=false;
 //pendant: this is no clean way to do it. These values come from colladaloaer
   // this.scale.x = this.scale.y = this.scale.z = 0.125; // 1/8 scale, modeled in cm
   // this.rotation.x = Math.PI / -2;
@@ -15,62 +15,62 @@ var Clickable=function(object){
   var thisClickable=this;
   // console.log(this);
   // var light=addShadowedLight( 0,0.5,0, 0xffffff,0);
-  var light = new THREE.PointLight( 0xff0000, 0, 100 );
-  light.position.set( 0, 1, 0 );
-  this.add( light );
-  var helper = new THREE.PointLightHelper( light, 0.2 );
-  this.object.add( helper );
 
   // var light= new THREE.PointLight(0,1,0,0xff0000,0);
-  this.object.add(light);
   this.additionalMaterials=[];
   //mouse interaction stuff ahead
   // for(var a of this.meshes)
   var bbox = new THREE.BoxHelper(this.object);
-  bbox.material=new THREE.MeshBasicMaterial({color:0x00FF00,visible:false,transparent:true,opacity:0.5,wireframe:true});
+  bbox.material=new THREE.MeshBasicMaterial({color:0x00FF00,visible:true,transparent:true,opacity:0.2,wireframe:true});
   this.additionalMaterials[0]=new THREE.MeshStandardMaterial({side:THREE.DoubleSide,transparent:true,visible:true,metalness:1,color:0x000000});
   this.meshes[0].material=this.additionalMaterials[0];
-
+  this.displayStyle={
+    body:this.meshes[0].material
+  }
   // this.castShadow = true;
 
   this.add(bbox);
   onHandlers.call(bbox);
+  this.bbox=bbox;
+  this.on=function(a,arguments){
+    bbox.on(a,arguments);
+  }
 
-  bbox.on("mouseenter",function(){
-    thisClickable.soundForce=0.5;
+  bbox.on("mouseenter",function(e){
+    thisClickable.isHover=true;
     // console.log("ent");
     // light.intensity=1;
     // thisClickable.mesh.material.blending=THREE.AdditiveBlending;
 
   });
-  bbox.on("mouseleave",function(){
-
+  bbox.on("mouseleave",function(e){
+    thisClickable.isHover=false;
     // console.log("leave");
     // light.intensity=0;
     // thisClickable.mesh.material.blending=THREE.SustractiveBlending;
 
   });
-  bbox.on("mousedown",function(){
+  bbox.on("mousedown",function(e){
+    console.log(thisClickable.instId);
     // console.log("dn");
     // light.intensity=3;
     // thisClickable.mesh.material.blending=THREE.AdditiveBlending;
     // for(var a of ['x','y','z']){
     //   thisClickable.rotForce[a]+=Math.random()*0.005;
     // }
-    console.log(thisClickable.object.instId);
-    console.log(thisClickable.object.parent.instId);
-    console.log(thisClickable.instId);
-    thisClickable.soundForce=4;
+
+
   });
-  bbox.on("mouseup",function(){
+  bbox.on("mouseup",function(e){
+
     // console.log("up");
     // light.intensity=1;
     // thisClickable.mesh.material.blending=THREE.SustractiveBlending;
   });
   scene.add(this);
-  this.update=function(vars){
+  this.update=function(e){
     // console.log(time);
-    var time=vars.time;
+    var time=e.time;
     var update=false;
     for(var a of ['x','y','z']){
       // light.position[a]=thisClickable.object.position[a];
@@ -83,18 +83,11 @@ var Clickable=function(object){
         update=true;
       }
     }
-    if(currentPat>1)
-    light.intensity=thisClickable.soundForce;
-    var a = thisClickable.soundForce;
-    var color = new THREE.Color( a,a/3,a/3 );
-    thisClickable.mesh.material.emissive=color;
-    helper.update();
-    thisClickable.soundForce=thisClickable.soundForce*0.93;
     //if(update)
     bbox.update(thisClickable.object);
   }
-  worldManager.on('render',this.update);
 
+  worldManager.on('render',this.update);
 
 }
 Clickable.prototype = Object.create(THREE.Object3D.prototype);

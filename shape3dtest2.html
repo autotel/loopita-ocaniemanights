@@ -60,7 +60,7 @@
 		<script src="js/simpleModelLoader.three.js"></script>
 
 		<script src="js/clickable.three.js"></script>
-
+		<script src="js/instrumentConstructBase.js"></script>
 
 
 <script>
@@ -72,6 +72,8 @@ var camera=worldManager.camera;
 var scenery;
 
 var currentPat=0;
+//used for instrumentConstructs
+var instrumentClickables=[];
 
 worldManager.onFrame=function(){};
 worldManager.on('start',function(){
@@ -80,15 +82,18 @@ worldManager.on('start',function(){
   scene.add(this.ambientLight);
 
 	scenery=new Scenery('./models/scenery.dae',function(){
-		// scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+		scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
 		// console.log(this);
-		var test=0;
-		for(var a of this.instrumentObjects){
+
+		for(var a in this.instrumentObjects){
+			var a_inst=this.instrumentObjects[a];
 			// console.log(a);
-			scene.remove(a);
-			objects.push(new Clickable(a));
-			this.instrumentObjects.instId=test;
-			test++;
+			//scene.remove(a_inst);
+			var nCk=new Clickable(a_inst);
+			instrumentClickables[a]=nCk;
+			objects.push(nCk);
+			nCk.instId=a;
+
 		}
 		for(var a of this.cubes){
 			// console.log(a);
@@ -109,11 +114,46 @@ worldManager.start();
 for(var a of loopsDatabase){
 	patchMan.databaseItem(a);
 }
-var instrumentConstructs={};
+var instrumentConstructs=[];
 var onAllLoaded=function(){
-	instrumentConstructs={
-		"a":worldManager.instrumentObjects[0]
-	}
+	instrumentConstructs.push(new InstrumentConstruct(
+		"bombo",
+		[instrumentClickables[0],
+		instrumentClickables[1],
+		instrumentClickables[2]]
+	));
+	instrumentConstructs.push(new InstrumentConstruct(
+		"shakers",
+		[instrumentClickables[10],
+		instrumentClickables[8]]
+	));
+	instrumentConstructs.push(new InstrumentConstruct(
+		"congas",
+		[instrumentClickables[7],
+		instrumentClickables[12]]
+	));
+	instrumentConstructs.push(new InstrumentConstruct(
+		"organillo_1",
+		[instrumentClickables[4],
+		instrumentClickables[5]]
+	));
+	instrumentConstructs.push(new InstrumentConstruct(
+		"organillo_2",
+		[instrumentClickables[15]]/*,
+		instrumentClickables[16]]*/
+	));
+	instrumentConstructs.push(new InstrumentConstruct(
+		"snare",
+		[instrumentClickables[11]]
+	));
+	instrumentConstructs.push(new InstrumentConstruct(
+		"clap",
+		[instrumentClickables[9]]
+	));
+	instrumentConstructs.push(new InstrumentConstruct(
+		"bass",
+		[instrumentClickables[6]]
+	));
 }
 
 </script>

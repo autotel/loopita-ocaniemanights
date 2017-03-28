@@ -11,7 +11,7 @@ var mouse=(function(){
     var intersects = raycaster.intersectObjects( scene.children , true);
     if ( intersects.length > 0 ) {
       if ( underMouse != intersects[ 0 ].object ) {
-        if ( underMouse ) underMouse.handle('mouseleave');
+        if ( underMouse ) underMouse.handle('mouseleave',{});
         var thereis=false;
         var search=0;
         /*if(intersects[0].object.handle){
@@ -30,7 +30,7 @@ var mouse=(function(){
             underMouse = intersects[thereis].object;
             //case where first intersect is object with handler
             // console.log(underMouse);
-            underMouse.handle('mouseenter');
+            underMouse.handle('mouseenter',{});
           // }
         }else{
           //case intersect goes to object with handler to object without
@@ -42,7 +42,7 @@ var mouse=(function(){
       if(underMouse)
       if(underMouse.handle){
         //case there was object with handler last frame but not anymore
-        underMouse.handle('mouseleave');
+        underMouse.handle('mouseleave',{});
         underMouse = null;
       }
     }

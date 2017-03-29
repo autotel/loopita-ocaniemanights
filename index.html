@@ -82,7 +82,7 @@ worldManager.on('start',function(){
   scene.add(this.ambientLight);
 
 	scenery=new Scenery('./models/scenery.dae',function(){
-		// scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+		scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
 		// console.log(this);
 
 		for(var a in this.instrumentObjects){
@@ -115,59 +115,96 @@ for(var a of loopsDatabase){
 	patchMan.databaseItem(a);
 }
 var instrumentConstructs=[];
+
 var onAllLoaded=function(){
+	var GCKBMN=function(name){
+		for(var a of instrumentClickables){
+			// console.log("+",a.object.name+"!="+name);
+			if(a.object.name==name)
+			return a
+		}
+		console.error(name+" not found in scenery");
+	}
+	//!7 hey is not mapped to any instrument nor 14 ride 2  minor pad 13 hh, 17 trumps
 	var nin;
 	nin=new InstrumentConstruct(
 		"bombo",
-		[instrumentClickables[0],
-		instrumentClickables[1],
-		instrumentClickables[2]]
+		[GCKBMN("inst-bombo-002"),
+		GCKBMN("inst-bombo-003"),
+		GCKBMN("inst-bombo-004")],
+		0
+	);
+	nin.setColor(0x00008f);
+	instrumentConstructs.push(nin);
+	nin=new InstrumentConstruct(
+		"kick_1",
+		[GCKBMN("inst-bombo-001")],
+		9
+	);
+	nin.setColor(0x00008f);
+	instrumentConstructs.push(nin);
+	nin=new InstrumentConstruct(
+		"kick_2",
+		[GCKBMN("inst-bombo-000")]
 	);
 	nin.setColor(0x00008f);
 	instrumentConstructs.push(nin);
 	nin=new InstrumentConstruct(
 		"shakers",
-		[instrumentClickables[10],
-		instrumentClickables[8]]
+		[GCKBMN("inst-Shaker-000"),
+		GCKBMN("inst-Shaker-001")],
+		8
 	);
 	nin.setColor(0xFFFFFF);
 	instrumentConstructs.push(nin);
 	nin=new InstrumentConstruct(
-		"congas",
-		[instrumentClickables[7],
-		instrumentClickables[12]]
+		"timbal_1",
+		[GCKBMN("inst-Timbal-001")],
+		5
+	);
+	nin.setColor(0x763f2a);
+	instrumentConstructs.push(nin);
+	nin=new InstrumentConstruct(
+		"timbal_2",
+		[GCKBMN("inst-Timbal-000")],
+		6
 	);
 	nin.setColor(0x763f2a);
 	instrumentConstructs.push(nin);
 	nin=new InstrumentConstruct(
 		"organillo_1",
-		[instrumentClickables[4],
-		instrumentClickables[5]]
+		[GCKBMN("instSub-Organillo-Cuerpo-001"),
+		GCKBMN("instSub-Organillo-Manilla-001")],
+		4
 	);
 	nin.setColor(0x00ffff);
 	instrumentConstructs.push(nin);
 	nin=new InstrumentConstruct(
 		"organillo_2",
-		[instrumentClickables[15]]/*,
-		instrumentClickables[16]]*/
+		[GCKBMN("instSub-Organillo-Cuerpo-000"),
+		GCKBMN("instSub-Organillo-Manilla-000")],
+		3
 	);
 	nin.setColor(0x00ffff);
 	instrumentConstructs.push(nin);
 	nin=new InstrumentConstruct(
 		"snare",
-		[instrumentClickables[11]]
+		[GCKBMN("inst-Snare")],
+		10
 	);
 	nin.setColor(0xffff00);
 	instrumentConstructs.push(nin);
 	nin=new InstrumentConstruct(
 		"clap",
-		[instrumentClickables[9]]
+		[GCKBMN("inst-Clap")],
+		11
 	);
 	nin.setColor(0xccff00);
 	instrumentConstructs.push(nin);
 	nin=new InstrumentConstruct(
 		"bass",
-		[instrumentClickables[6]]
+		[GCKBMN("inst-bass")],
+		1
 	);
 	nin.setColor(0xff00ff);
 	instrumentConstructs.push(nin);

@@ -8,6 +8,7 @@ InstrumentConstruct=function(name,clickables,patchManVoice,customization){
   var soundForce=0;
   var light = new THREE.PointLight( 0xff0000, 1, 100 );
   var myMainColor=0xff0000;
+  var looperState=0;
   // var helper = new THREE.PointLightHelper( light, 0.2 );
   // this.clickables[0].object.add( helper );
   this.clickables[0].add( light );
@@ -24,7 +25,7 @@ InstrumentConstruct=function(name,clickables,patchManVoice,customization){
 
   this.update=function(e){
     // if(currentPat>1)
-    var a = soundForce;
+    var a = soundForce+(looperState/4);
     var color = new THREE.Color( (a/2)+a*0.03*((myMainColor&0xFF0000)>>16),(a/2)+a*0.03*((myMainColor&0xFF00)>>8),(a/2)+a*0.03*((myMainColor&0xFF)) );
     light.intensity=soundForce;
     for(var a of thisInstConst.clickables){
@@ -41,16 +42,39 @@ InstrumentConstruct=function(name,clickables,patchManVoice,customization){
   }
 
   for(var a in this.clickables){
-    a_clickable=this.clickables[a];
+    var a_clickable=this.clickables[a];
+    console.log(a_clickable.object.name+" setting click listener",this);
     a_clickable.on('mouseenter',function(){
       soundForce=0.5;
     });
     a_clickable.on('mousedown',function(){
       soundForce=4;
       console.log("dn");
+      //more simple could be to activate/deactovate voie according to the state
+      stateAndRun(patchManVoice,function(n,looper){
+        if(n==0){
+          looper.enqueueStart();
+          looperState=1;
+        }else if(n==1){
+          looper.enqueueStop();
+          looperState=0;
+        }else{
+          looper.enqueueStop();
+          looperState=3;
+        }
+        looper.once('loopStateUpdate',function(a){
+          if(a.isWaiting){
+            looperState=1;
+          }else if(a.isLooping){
+            looperState=2;
+          }else{
+            looperState=0;
+          }
+        });
+      });
     });
     a_clickable.on('mouseleave',function(){
-      console.log(thisInstConst.clickables[0]);
+      // console.log(thisInstConst.clickables[0]);
     });
   }
   worldManager.on('render',this.update);

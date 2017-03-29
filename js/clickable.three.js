@@ -21,6 +21,8 @@ var Clickable=function(object){
   //mouse interaction stuff ahead
   // for(var a of this.meshes)
   var bbox = new THREE.BoxHelper(this.object);
+  this.add(bbox);
+  // var bbox=this.object;
   bbox.material=new THREE.MeshBasicMaterial({color:0x00FF00,visible:true,transparent:true,opacity:0.2,wireframe:true});
   this.additionalMaterials[0]=new THREE.MeshStandardMaterial({side:THREE.DoubleSide,transparent:true,visible:true,metalness:1,color:0x000000});
   this.meshes[0].material=this.additionalMaterials[0];
@@ -29,7 +31,6 @@ var Clickable=function(object){
   }
   // this.castShadow = true;
 
-  this.add(bbox);
   onHandlers.call(bbox);
   this.bbox=bbox;
   this.on=function(a,arguments){
@@ -51,7 +52,7 @@ var Clickable=function(object){
 
   });
   bbox.on("mousedown",function(e){
-    console.log(thisClickable.instId);
+    console.log(thisClickable.instId+thisClickable.object.name);
     // console.log("dn");
     // light.intensity=3;
     // thisClickable.mesh.material.blending=THREE.AdditiveBlending;

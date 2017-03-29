@@ -22,6 +22,21 @@ onHandlers=function(){
     }
     return this;
   }
+  this.once = function(name, callback) {
+    var name = name.split(".");
+    if (typeof callback === 'function') {
+      if (name.length == 0) {
+        throw ("sorry, you gave an invalid event name");
+      } else if (name.length > 0) {
+        if (!this.ons[name[0]]) this.ons[name[0]] = [];
+        this.ons[name[0]].push([true, callback]);
+      }
+      // console.log(this.ons);
+    } else {
+      throw ("error at mouse.on, provided callback that is not a function");
+    }
+    return this;
+  }
   this.off = function(name) {
     var name = name.split(".");
     if (name.length > 1) {
@@ -41,6 +56,9 @@ onHandlers=function(){
         try{
           // console.log(this.ons[fname][n][1]);
           this.ons[fname][n][1](params);
+          if(this.ons[fname][n][0]){
+            this.ons[fname].splice(this.ons[fname][n], 1);
+          }
         }catch(e){
           console.error("onHandler: error with "+fname+" callback:",e);
         }

@@ -61,6 +61,9 @@
 		<script src="libs/Tone.js"></script>
 		<script>
 		var context=Tone.context;
+		window.addEventListener('click',()=>{
+			context.resume();
+		})
 		</script>
 		<script src="libs/three.js"></script>
 		<script src="libs/onHandlers.js"></script>

@@ -1,8 +1,9 @@
+'use strict';
 function find(obj,through,property,value,recursion){
   var rets=[];
   if(!recursion){
     var recursion=0;
-    console.log("find objs whose "+property+" is "+value+" recursively through "+through);
+    // console.log("find objs whose "+property+" is "+value+" recursively through "+through);
   }
   var tabbing="";
   for(var a=0; a<recursion; a++){
@@ -10,15 +11,15 @@ function find(obj,through,property,value,recursion){
   }
 
   if(recursion>20){
-    console.log(tabbing+"reached recursion limit here");
+    // console.log(tabbing+"reached recursion limit here");
     return false;
   }else{
     // if(obj.children){
     for(var a in obj[through]){
-      console.log(tabbing+"+"+obj[through][a][property]);
+      // console.log(tabbing+"+"+obj[through][a][property]);
       rets =rets.concat(find(obj[through][a],through,property,value,recursion+1));
       if(obj[through][a][property].match(value)){
-        console.log(tabbing+" ->returning");
+        // console.log(tabbing+" ->returning");
         rets.push(obj[through][a]);
       }
     }
@@ -26,7 +27,8 @@ function find(obj,through,property,value,recursion){
   }
   return rets;
 }
-Scenery = function(path,loadCallback) {
+var colladaLoadedModel=[];
+var Scenery = function(path,loadCallback) {
 	var model;
 	var animations;
 	var kfAnimations = [];
@@ -41,11 +43,13 @@ Scenery = function(path,loadCallback) {
   this.objects = [];
   this.building = [];
   this.instrumentObjects = [];
+  this.instrumentStands=[];
   this.lights = [];
 
 	loader.load(path, function(collada) {
-		console.log("loaded", collada);
+		// console.log("loaded", collada);
 		model = collada.scene;
+    colladaLoadedModel=model;
     thisScenery.model=model;
 		model.rotation.x = Math.PI / -2;
     model.scale.x = model.scale.y = model.scale.z = 0.125; // 1/8 scale, modeled in cm
@@ -56,7 +60,9 @@ Scenery = function(path,loadCallback) {
 		start();
 		animate(lastTimestamp);
 
-    // model.updateMatrix();
+    thisScenery.camera = find(model, "children", "name", "Camera");
+    console.log("camera:",thisScenery.camera);
+
 
     worldManager.on('render',function(a){animate(a.time);});
 		var nmaterial = new THREE.MeshStandardMaterial({
@@ -69,14 +75,16 @@ Scenery = function(path,loadCallback) {
 		});
 
 		thisScenery.instrumentObjects = find(model, "children", "name", /^inst(Sub)*-.+/i);
+    thisScenery.instrumentStands = find(model, "children", "name", /^pie-.+/);
 		for (var a of thisScenery.objects) {
 			a.children[0].material = nmaterial;
 		}
 
+
     thisScenery.building = find(model, "children", "name", /^building-.+/i);
 		for (var a of thisScenery.building) {
       a.activateShadow=function(helper){
-        console.log("acrivate shadow of "+a.name);
+        console.log("activate shadow of "+a.name);
   			a.children[0].castShadow = true;
   			a.children[0].receiveShadow = true;
       }
@@ -85,11 +93,13 @@ Scenery = function(path,loadCallback) {
     thisScenery.cubes = find(model, "children", "name", /^cube-.+/i);
 		for (var a of thisScenery.cubes) {
       a.activateShadow=function(helper){
-        console.log("acrivate shadow of "+a.name);
+        console.log("activate shadow of "+a.name);
   			a.children[0].castShadow = true;
   			a.children[0].receiveShadow = true;
       }
 		}
+
+    thisScenery.endingTrigger = find(model, "children", "name", /^final-.+/i);
 
 		thisScenery.objects = find(model, "children", "name", /^[decor|pie|inst]*-.+/i);
 		for (var a of thisScenery.objects) {
@@ -99,11 +109,14 @@ Scenery = function(path,loadCallback) {
       }
 		}
 
+    thisScenery.backgroundDome = find(model, "children", "name", /^dome-background/i)[0];
+
+
 		thisScenery.lights = find(model, "children", "name", /^light-.+/i);
 		for (var a of thisScenery.lights) {
 			console.log(a.children.length)
 			var a_light = a.children[0];
-			console.log(a_light);
+			// console.log(a_light);
       a.activateShadow=function(helper){
   			a_light.castShadow = true;
   			var d = 0.6;

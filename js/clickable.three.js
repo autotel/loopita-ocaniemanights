@@ -1,5 +1,6 @@
+'use strict';
 var Clickable=function(object){
-  console.log("clickable created",object.name)
+  // console.log("clickable created",object.name)
   THREE.Object3D.apply(this, arguments);
   this.force=new THREE.Vector3(0,0,0);
   this.rotForce=new THREE.Vector3(0,0,0);
@@ -7,6 +8,7 @@ var Clickable=function(object){
   this.meshes=find(this.object,"children","type","Mesh");
   this.mesh=this.meshes[0];
   this.isHover=false;
+  this.clickEnabled=true;
 //pendant: this is no clean way to do it. These values come from colladaloaer
   // this.scale.x = this.scale.y = this.scale.z = 0.125; // 1/8 scale, modeled in cm
   // this.rotation.x = Math.PI / -2;
@@ -21,9 +23,11 @@ var Clickable=function(object){
   //mouse interaction stuff ahead
   // for(var a of this.meshes)
   var bbox = new THREE.BoxHelper(this.object);
+  var detectorBody=bbox;
   this.add(bbox);
   // var bbox=this.object;
-  bbox.material=new THREE.MeshBasicMaterial({color:0x00FF00,visible:true,transparent:true,opacity:0.2,wireframe:true});
+  bbox.material=new THREE.MeshBasicMaterial({color:0x00FF00,visible:false,transparent:true,opacity:0.2,wireframe:true});
+  // bbox.scale=0.7;
   this.additionalMaterials[0]=new THREE.MeshStandardMaterial({side:THREE.DoubleSide,transparent:true,visible:true,metalness:1,color:0x000000});
   this.meshes[0].material=this.additionalMaterials[0];
   this.displayStyle={
@@ -31,27 +35,27 @@ var Clickable=function(object){
   }
   // this.castShadow = true;
 
-  onHandlers.call(bbox);
+  onHandlers.call(detectorBody);
   this.bbox=bbox;
-  this.on=function(a,arguments){
-    bbox.on(a,arguments);
+  this.on=function(a,b){
+    detectorBody.on(a,b);
   }
 
-  bbox.on("mouseenter",function(e){
+  detectorBody.on("mouseenter",function(e){
     thisClickable.isHover=true;
     // console.log("ent");
     // light.intensity=1;
     // thisClickable.mesh.material.blending=THREE.AdditiveBlending;
 
   });
-  bbox.on("mouseleave",function(e){
+  detectorBody.on("mouseleave",function(e){
     thisClickable.isHover=false;
     // console.log("leave");
     // light.intensity=0;
     // thisClickable.mesh.material.blending=THREE.SustractiveBlending;
 
   });
-  bbox.on("mousedown",function(e){
+  detectorBody.on("mousedown",function(e){
     console.log(thisClickable.instId+thisClickable.object.name);
     // console.log("dn");
     // light.intensity=3;
@@ -62,7 +66,7 @@ var Clickable=function(object){
 
 
   });
-  bbox.on("mouseup",function(e){
+  detectorBody.on("mouseup",function(e){
 
     // console.log("up");
     // light.intensity=1;

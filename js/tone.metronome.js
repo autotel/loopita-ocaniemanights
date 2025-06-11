@@ -1,3 +1,5 @@
+'use strict';
+
 var loop;
 var transportCurrentStep=0;
 var globalTransport=false;

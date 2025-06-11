@@ -1,11 +1,12 @@
-var mouse=(function(){
+'use strict';
+var mouse=new (function(){
   this.x=-4;
   this.y=-4;
   this.normalized=new THREE.Vector2(-4,-4);
   var underMouse;
   var raycaster = new THREE.Raycaster();
   var thisMouse=this;
-  raycast=function(){
+  function raycast(){
     //pendant: there should perhaps be a mouse scene, so the raycaster doesnt have to scan the whole model
     raycaster.setFromCamera( thisMouse.normalized, camera );
     var intersects = raycaster.intersectObjects( scene.children , true);
@@ -22,7 +23,12 @@ var mouse=(function(){
         }*/
         for(search=0;(!thereis) && search<intersects.length;search++){
           if(intersects[search].object.handle){
-            thereis=search;
+            // console.log(intersects[search]);
+            if(intersects[search].object.parent.clickEnabled){
+              thereis=search;
+            }else{
+              // console.log(intersects[search].object);
+            }
           }
         }
         if(thereis){
@@ -54,6 +60,7 @@ var mouse=(function(){
     thisMouse.y=e.clientY;
     thisMouse.normalized.x = ( e.clientX / window.innerWidth ) * 2 - 1;
     thisMouse.normalized.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+    raycast();
   });
   document.addEventListener("mousedown",function(e){
     if(underMouse)

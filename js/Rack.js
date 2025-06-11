@@ -1,4 +1,5 @@
-Rack=function(parent,options){
+'use strict';
+var Rack=function(parent,options){
   var me=this;
   this.effects={};
   this.appendend=false;

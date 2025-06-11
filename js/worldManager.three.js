@@ -1,16 +1,20 @@
-var worldManager=(function(){
-  onHandlers.call(this);
+'use strict';
 
+
+var worldManager=new (function(){
+  onHandlers.call(this);
+  this.instrumentList={};
   var objects = [];
   var scene={};
   var camera={};
   var thisWorldManager=this;
-
   init();
 
   this.objects=objects;
   this.scene=scene;
   this.camera=camera;
+  var listener;
+  this.listener;
 
 
 
@@ -19,6 +23,7 @@ var worldManager=(function(){
   var container;
   var cameraTarget;
   var renderer;
+  // var cameraCenter;
   this.start=function(){
     thisWorldManager.handle('start');
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
@@ -34,15 +39,27 @@ var worldManager=(function(){
 
 
     camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.01, 1000 );
-    camera.position.set( 2.6,1,0 );
+    //x: z
+    //y: y
+    //z: x
+    camera.position.set( 2,0.7,0 );
+    // cameraCenter=new THREE.Vector3(2,0.7,0);
+
     camera.lookAt( new THREE.Vector3( 0,0.4,0 ) );
 
+
+    var listener = new THREE.AudioListener();
+    listener.context=Tone.context;
+    thisWorldManager.listener=listener;
+    camera.add( listener );
 
 
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog( 0x000000, 2, 15 );
 
     renderer = new THREE.WebGLRenderer( { antialias: true } );
+    thisWorldManager.renderer=renderer;
+
 
     renderer.setClearColor( scene.fog.color );
     renderer.setPixelRatio( window.devicePixelRatio );
@@ -59,10 +76,7 @@ var worldManager=(function(){
       // renderer.shadowMap.enabled = true;
 
     }
-
     container.appendChild( renderer.domElement );
-
-
     window.addEventListener( 'resize', onWindowResize, false );
     thisWorldManager.handle("setup",{renderer:renderer,container:container});
   }
@@ -75,25 +89,70 @@ var worldManager=(function(){
     requestAnimationFrame( animate );
     render();
   }
+  var endingCamera=false;
+  this.on('endingstart',function(){
+    endingCamera=0;
+  });
+  var lastTimer=0;
+  //how much the camera is mouse controlled
+  var freeCamera=false;
   function render() {
     var timer = Date.now() * 0.0005;
-    // var vRat= 0.5-(( mouse.y/ window.innerHeight));
-    // var lkat=new THREE.Vector3();
-    // lkat.x = Math.cos( mouse.x/ window.innerWidth *Math.PI*2 ) * 1;
-    // lkat.y = vRat*3+0.6;
-    // lkat.z = Math.sin( mouse.x/ window.innerWidth *Math.PI*2 ) * 1;
-    // camera.position.x=0;
-    // camera.position.y=vRat+0.6;
-    // camera.position.z=0;
-    // camera.lookAt(lkat);
-    if(currentPat==0)
-    camera.lookAt(new THREE.Vector3(0, 0.6, 0));
-    if(currentPat>0)
-    camera.lookAt(new THREE.Vector3(-mouse.normalized.y * 2, 0.6, -mouse.normalized.x));
+    var deltaTime=timer-lastTimer;
+    lastTimer=timer;
 
-    mouse.raycast();
+    //this is to smoothly transition into fixed camera to free moving camera in the beggining
+    var lookat=[];
+    if(patchMan.currentPat==0)
+      lookat=[0, 0.6, 0];
+    if(patchMan.currentPat>0&&freeCamera===false) freeCamera=0;
+    if(freeCamera!==false&&freeCamera<1){
+      lookat=[0, 0.6, 0];
+      // console.log(freeCamera);
+      freeCamera+=deltaTime*0.5;
+      var lookata= [-5, mouse.normalized.y*3+2, mouse.normalized.x*-1];
+      for(var a in lookat){
+        lookat[a]=(freeCamera*lookata[a])+((1-freeCamera)*lookat[a]);
+      }
+    }else if(freeCamera>0.6){
+      lookat= [-5, mouse.normalized.y*3+2, mouse.normalized.x*-1];
+    }
+    //this is to smoothly transition into ending camera
+
+    if(endingCamera!==false&&endingCamera<1){
+      var endLookat=[5, mouse.normalized.y*-3, mouse.normalized.x*1];
+      endingCamera+=deltaTime*0.1;
+      // console.log(endingCamera);
+      for(var a in lookat){
+        lookat[a]=((endingCamera)*endLookat[a])+((1-endingCamera)*lookat[a]);
+      }
+      for(var v of patchMan.voices){
+        v.enqueueStop();
+      }
+      patchMan.voices[8].enqueueStart();
+      patchMan.changePatternTo(7);
+      patchMan.setWet(endingCamera*0.1);
+    }else if(endingCamera!==false){
+      var endLookat=[5, mouse.normalized.y*-3, mouse.normalized.x*1];
+      endingCamera+=deltaTime*0.5;
+      for(var a in lookat){
+        lookat[a]=endLookat[a];
+      }
+			patchMan.setWet(endingCamera*0.1);
+      lookat=[5, mouse.normalized.y*-3, mouse.normalized.x*1];
+    }else{
+      patchMan.setWet(Math.max(0,mouse.normalized.y)*0.7);
+    }
+
+    camera.lookAt(new THREE.Vector3(lookat[0],lookat[1],lookat[2]));
+    // for (var a of ["x","y","z"]){
+    //   camera.position[a]=cameraCenter[a]*0.3+camera.lookAt[a]*0.7;
+    // }
+
+
+    // mouse.raycast();
     renderer.render( scene, camera );
-    this.handle('render',{time:timer,camera:camera,scene:scene});
+    thisWorldManager.handle('render',{time:timer,camera:camera,scene:scene,deltaTime:deltaTime});
     thisWorldManager.onRender.call(thisWorldManager,timer);
   }
   return this;

@@ -1,4 +1,63 @@
-var transportMan=(function(){
+'use strict';
+//pendant: remove this
+// var granularSynth
+// function createGS(){granularSynth=(function(){
+//   var context=Tone.context;
+//   var outputNode=context.createGain();
+//   outputNode.toMaster();
+//   var thisGS=this;
+//   this.granules=[];
+//   for(var a=0; a<grains.length; a++){
+//     (function(){
+//       var dir=grains[a].source;
+//       var name=grains[a].name;
+//       granules[a]={};
+//       granules[a].mixNode=context.createGain();
+//       granules[a].mixNode.gain.value=0;
+//       var source = context.createBufferSource();
+//       granules[a].source=source;
+//       source.connect(granules[a].mixNode);
+//       granules[a].mixNode.connect(outputNode);
+//       var request = new XMLHttpRequest();
+//       request.open('GET', dir, true);
+//       request.responseType = 'arraybuffer';
+//       request.onload = function() {
+//         console.log("loaded grain "+name,request.response);
+//         context.decodeAudioData(request.response, function(response) {
+//           source.buffer = response;
+//           source.start(0);
+//           source.loop = true;
+//          }, function (e) { console.error('The request failed.',e); } );
+//       }
+//       request.send();
+//     })()
+//   }
+//   var granuleFader=0;
+//   var volumeFader=0;
+//   function cub(a){return a*a*a;}
+//   this.soundUpdate=function(){
+//     granuleFader=(mouse.normalized.x+1)/2;
+//     volumeFader=(mouse.normalized.y+1)/2;
+//     outputNode.gain.value=volumeFader;
+//     var denormGranuleFader=granuleFader*thisGS.granules.length;
+//     var granuleRange=5;
+//     var halfRange=Math.floor(granuleRange/2);
+//     for(var a =0; a<granules.length;a++){
+//       a_granule=granules[a];
+//       a_granule.mixNode.gain.value=1-cub(Math.abs(granuleFader-(a/granules.length)));
+//       // if(a==Math.floor(denormGranuleFader)){
+//       //
+//       //   a_granule.mixNode.gain.value=1;
+//       // }else{
+//       //   a_granule.mixNode.gain.value=0;
+//       // }
+//     }
+//   }
+//   worldManager.on('render',this.soundUpdate);
+//   return this;
+// })();
+// }
+var transportMan=new (function(){
   onHandlers.call(this);
   Tone.Transport.bpm.value = 120;
   this.bps=(Tone.Transport.bpm.value/60);
@@ -13,7 +72,7 @@ var transportMan=(function(){
   return this;
 })();
 
-var loopMan=(function(){
+var loopMan=new(function(){
   onHandlers.call(this);
   this.isLooping=false;
   this.isWaiting=false;
@@ -22,43 +81,110 @@ var loopMan=(function(){
     //controls looper timers with callbak
     return this;
   })();
-  this.Looper=function(SampleFilePath){
-    onHandlers.call(this);
+  this.Player=function(SampleFilePath){
+    // onHandlers.call(this);
     this.beatsLength=0;
-    var thisLooper=this;
-    this.engine=new Tone.Player(SampleFilePath,function(e){
-      thisLooper.beatsLength = Math.floor(transportMan.bps * thisLooper.engine.buffer.duration)*8;
-      console.log(thisLooper.beatsLength);
-    });
+    var thisPlayer=this;
+    try{
+      this.engine=new Tone.Player(SampleFilePath,function(e){
+        thisPlayer.beatsLength = Math.floor(transportMan.bps * thisPlayer.engine.buffer.duration)*8;
+        console.log(thisPlayer.beatsLength);
+      });
+    }catch(e){
+      console.log(e,SampleFilePath);
+    }
     this.engine.retrigger=true;
-    //connect output to master
-    //fns
+    this.play=function(){
+      thisPlayer.engine.start ();
+    }
+    this.stop=function(){
+      thisPlayer.engine.stop();
+    }
+  }
+  this.Voice=function(player){
+    onHandlers.call(this);
+    var thisVoice=this;
+    this.players=[player];
+    var currentPlayer=0;
+    this.isPlaying=false;
+    //beware! isLooping doesnt mean the usual looping. It means wether it will keep playing on the next cycle.
+    this.isLooping=false;
+    // this.outputNode=new Tone.Gain();
+    this.outputNode=Tone.context.createGain();
+    player.engine.connect(this.outputNode);
+    this.toggle=function(){
+      if(this.isLooping){
+        // console.log("toggling into stop");
+        this.enqueueStop();
+      }else{
+        // console.log("toggling into start");
+
+        this.enqueueStart();
+      }
+    }
+    this.changeCurrentPlayerToPatn=function(n){
+      var logLoopers="playing: ";
+      var availableThisN=false;
+      for(var a in this.players){
+        var a_player=this.players[a];
+        if(a_player.properties.patn.indexOf(n)!=-1){
+          logLoopers+=("["+a+"]"+a_player.properties.name);
+          availableThisN=true;
+          currentPlayer=a;
+        }else{
+          // console.log(a_player.properties.patn+" is not "+n);
+        }
+      }
+      if(!availableThisN){
+        thisVoice.enqueueStop();
+      }
+      // console.log(logLoopers);
+      return availableThisN;
+    }
+    this.addPlayer=function(newPlayer){
+      thisVoice.players.push(newPlayer);
+      newPlayer.engine.connect(this.outputNode);
+    }
     this.enqueueStart=function(){
-      thisLooper.isLooping=true;
-      this.isWaiting=true;
-      this.handle("loopStateUpdate",{isWaiting:thisLooper.isWaiting,isLooping:thisLooper.isLooping});
+      thisVoice.isLooping=true;
+      thisVoice.isWaiting=true;
+      thisVoice.handle("loopstatechange",{isWaiting:thisVoice.isWaiting,isLooping:thisVoice.isLooping});
+      patchMan.handle("loopStateChange",{voice:thisVoice,isWaiting:thisVoice.isWaiting,isLooping:thisVoice.isLooping});
+
+      // console.log( "my beatslen"+thisVoice.players[currentPlayer].beatsLength );
       //pendant:consider using the startingtime to schedule playback with more precision
       //.start ([startTime][, offset][, duration])
     }
     this.enqueueStop=function(){
-      thisLooper.isLooping=false;
-      this.isWaiting=false;
-      this.handle("loopStateUpdate",{isWaiting:thisLooper.isWaiting,isLooping:thisLooper.isLooping});
-    }
-    this.play=function(){
-      thisLooper.engine.start ();
-      this.isWaiting=false;
-      this.handle("loopStateUpdate",{isWaiting:thisLooper.isWaiting,isLooping:thisLooper.isLooping});
+      thisVoice.isLooping=false;
+      thisVoice.isWaiting=false;
+      thisVoice.handle("loopstatechange",{isWaiting:thisVoice.isWaiting,isLooping:thisVoice.isLooping});
     }
     this.stop=function(){
-      thisLooper.engine.stop();
-      this.isWaiting=false;
-      this.handle("loopStateUpdate",{isWaiting:thisLooper.isWaiting,isLooping:thisLooper.isLooping});
+      thisVoice.isPlaying=false;
+      thisVoice.isWaiting=false;
+      thisVoice.isLooping=false;
+      thisVoice.players[currentPlayer].stop();
+      thisVoice.handle("loopstatechange",{isWaiting:thisVoice.isWaiting,isLooping:thisVoice.isLooping});
+    }
+    this.play=function(){
+      thisVoice.isPlaying=true;
+      thisVoice.isWaiting=false;
+      thisVoice.players[currentPlayer].play();
+      thisVoice.handle("loopstatechange",{isWaiting:thisVoice.isWaiting,isLooping:thisVoice.isLooping});
+      patchMan.handle("loopStateChange",{voice:thisVoice,isWaiting:thisVoice.isWaiting,isLooping:thisVoice.isLooping});
     }
     this.beat = function(e) {
+      // console.log("beat");
       var step=e.step;
-      if (thisLooper.isLooping && step % thisLooper.beatsLength == 0) {
-        thisLooper.play();
+        if(step % thisVoice.players[currentPlayer].beatsLength == 0){
+          if (thisVoice.isLooping) {
+        // console.log("play");
+          thisVoice.handle("loopstatechange",{isWaiting:thisVoice.isWaiting,isLooping:thisVoice.isLooping});
+          thisVoice.play();
+        }else{
+          thisVoice.isPlaying=false;
+        }
       }
     }
     transportMan.on('beat',this.beat);
@@ -66,122 +192,65 @@ var loopMan=(function(){
   return this;
 })();
 
-var patchMan=(function(){
+var patchMan=new(function(){
+  this.currentPat=0;
   var audioCtx = new AudioContext();
   this.audioCtx=audioCtx;
   var masterNode=new Tone.Gain();
   masterNode.toMaster();
+  var thisPatchMan=this;
+
+  onHandlers.call(this);
+
+  var effectsNode=Tone.context.createGain();
+  var dryLevel=Tone.context.createGain();
+  var wetLevel=Tone.context.createGain();
+  effectsNode.connect(dryLevel);
+  effectsNode.connect(wetLevel);
+
+
+  var feedbackDelay = new Tone.FeedbackDelay("8n", 0.5);
+  // var convolver = new Tone.Convolver("Audio/impulses/RoomLarge.aiff");
+  wetLevel.connect(feedbackDelay);
+  feedbackDelay.connect(masterNode);
+  // convolver.connect(masterNode);
+  dryLevel.connect(masterNode);
+
+  this.setWet=function(val){
+    wetLevel.gain.value=val;
+    dryLevel.gain.value=1-val;
+    // feedbackDelay.feedback=value*0.7;
+  }
+
   var loops=[];
   var voices=[];
-  var voiceOutputNodes=[];
-  var voiceActiveState=[];
   this.loops=loops;
   this.voices=voices;
-  this.voiceOutputNodes=voiceOutputNodes;
-  var belongsToPattern=function(looper,pattern){
-    //beloingstoPattern is a patchman private because looper.properties are set by patchman
-    return looper.properties.patn.indexOf(pattern)!=-1;
-  }
-  this.updateVoiceStatuses=function(){
-    for(var a in loops){
-      var a_Loop=loops[a];
-      if(a_Loop.isWaiting){
-        voiceActiveState[a_Loop.properties.voicen]=1;
-      }else if(a_Loop.isLooping){
-        voiceActiveState[a_Loop.properties.voicen]=2;
-      }else if(!voiceActiveState[a_Loop.properties.patn]){
-        voiceActiveState[a_Loop.properties.voicen]=2;
-      }
+
+  this.changePatternTo=function(n){
+    console.log("patternto");
+    this.currentPat=n;
+    this.handle('patternchangerequested',n);
+    for(var a in this.voices){
+      this.voices[a].handle('patternchange',{newPatn:n,available:this.voices[a].changeCurrentPlayerToPatn(n)});
     }
   }
-  this.getVoiceStatus=function(n,update){
-    if(update){
-      for(var a in voices[n]){
-        var a_Loop=voices[n];
-        if(a_Loop.isWaiting){
-          voiceActiveState[a_Loop.properties.voicen]=1;
-        }else if(a_Loop.isLooping){
-          voiceActiveState[a_Loop.properties.voicen]=2;
-        }else if(!voiceActiveState[a_Loop.properties.patn]){
-          voiceActiveState[a_Loop.properties.voicen]=2;
-        }
-      }
-    }
-    return voiceActiveState[n];
-  }
-  this.changePatn=function(to){
-    this.updateVoiceStatuses();
-    for(var a in voiceActiveState){
-      if(voiceActiveState[a]>0)
-      activateVoice(a);
-    }
-  }
-  this.stateAndRun=function(n,cb){
-    //factually check if voice is playing.
-    //If is, run callback with arg 2
-    //if its waiting, run callback with arg 1
-    //if its not playing, run callback with arg 0
-    var retValue=0;
-    var correspondingLooper=false;
-    if(voices[n]){
-      for(var a=0; (correspondingLooper==false) && (a<voices[n].length); a++){
-        na_voice=voices[n][a];
-        if(belongsToPattern(na_voice,currentPat)){
-          correspondingLooper=na_voice;
-          if(na_voice.isWaiting){
-            retValue=1;
-          }else if(na_voice.isLooping){
-            retValue=2;
-          }
-          cb(retValue,correspondingLooper);
-        }
-      }
-    }else{
-      console.log("looperMan error: requested to activate a voice that doesn't exist: "+n);
-    }
-  }
-  this.activateVoice=function(n){
-    if(voices[n]){
-      for(var a in voices[n]){
-        na_voice=voices[n][a];
-        if(belongsToPattern(na_voice,currentPat)){
-            na_voice.enqueueStart();
-        }else{
-          if(na_voice.isLooping){
-            na_voice.enqueueStop();
-          }
-        }
-      }
-    }else{
-      console.log("looperMan error: requested to activate a voice that doesn't exist: "+n);
-    }
-  }
-  this.deactivateVoice=function(n){
-    if(voices[n]){
-      for(var a in voices[n]){
-        na_voice=voices[n][a];
-        if(na_voice.isLooping)
-        na_voice.enqueueStop();
-      }
-    }else{
-      console.log("looperMan error: requested to activate a voice that doesn't exist: "+n);
-    }
-  }
+
   this.databaseItem=function(itm){
-    newLooper=new loopMan.Looper(itm.source);
-    newLooper.properties=itm;
-    console.log("loading sample "+itm.name);
-    loops.push(newLooper);
-    if(!voices[itm.voicen]){
-      nGainNode=new Tone.Gain();
-      nGainNode.connect(masterNode);
-      voiceOutputNodes[itm.voicen]=nGainNode;
-      voices[itm.voicen]=[newLooper];
-      console.log("--."+(audioCtx.createGain() instanceof AudioNode));
-      newLooper.engine.connect(nGainNode);
-    }else{
-      voices[itm.voicen].push(newLooper);
-      newLooper.engine.connect(voiceOutputNodes[itm.voicen]);
+    try{
+      var newLooper=new loopMan.Player(itm.source);
+      newLooper.properties=itm;
+      newLooper.engine.connect(effectsNode);
+      console.log("loading sample "+itm.name);
+      loops.push(newLooper);
+      if(!voices[itm.voicen]){
+        //pendant: looper should be created in loopMan.Voice constructor
+        voices[itm.voicen]=new loopMan.Voice(newLooper);
+      }else{
+        voices[itm.voicen].addPlayer(newLooper);
+      }
+    }catch(e){
+      console.log("failed loading",itm,e);
     }
   }
   return this;

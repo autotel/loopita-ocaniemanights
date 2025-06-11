@@ -1,3 +1,4 @@
+'use strict';
 
 // ASCII file
 var Model=function(path,loadCallback){

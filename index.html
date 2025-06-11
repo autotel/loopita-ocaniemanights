@@ -1,12 +1,12 @@
 
 <html lang="en">
 	<head>
-		<title>three.js webgl - STL</title>
+		<title>Loopita.Ocaniemanights</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
 			body {
-				font-family: Monospace;
+				font-family: Helvetica;
 				background-color: #000000;
 				margin: 0px;
 				overflow: hidden;
@@ -15,15 +15,29 @@
 			#info {
 				color: #fff;
 				position: absolute;
-				top: 10px;
-				width: 100%;
+				top: 0px;
+				right: 0px;
 				text-align: center;
 				z-index: 100;
 				display:block;
 
 			}
+			#ending{
+				display: none;
+			}
+			#ending,#loading {
+				position:fixed;
+				top:0;
+				left:0;
+				text-align: center;
+				z-index: 101;
+				width:100%;
+				pointer-events:none;
+				color:crimson;
+			}
 
-			a { color: skyblue }
+			a{color:white; text-decoration: none}
+			a:hover { color: crimson; text-decoration: underline;}
 			.button { background:#999; color:#eee; padding:0.2em 0.5em; cursor:pointer }
 			.highlight { background:orange; color:#fff; }
 
@@ -37,178 +51,156 @@
 		</style>
 	</head>
 	<body>
+		<div id="info">(<a href="http://autotel.co/2017/03/18/ocaniemanights/">ocaniemanights</a>)</div>
+		<div id="ending"><h1>This is it.</h1>
+			<p>Thanks for the visit. You can refresh the page to keep playing, or just go somewhere else.</p>
+			<p><a href="http://autotel.co/2017/03/18/ocaniemanights/">ocaniemanights</a></p>
+		</div>
+		<div id="loading"><h2>Loading</h2></div>
 		<script src="libs/jquery-3.0.0.min.js"></script>
+		<script src="libs/Tone.js"></script>
+		<script>
+		var context=Tone.context;
+		</script>
 		<script src="libs/three.js"></script>
 		<script src="libs/onHandlers.js"></script>
+		<script src="libs/three/GPUParticleSystem.js" charset="utf-8"></script>
 
-		<script src="libs/Tone.js"></script>
+
 		<script src="js/database.js"></script>
 		<script src="js/LooperB.js"></script>
 
+
 		<script src="js/worldManager.three.js"></script>
+		<script src="js/particler.js"></script>
 		<script src="js/SceneLoaderCollada.three.js"></script>
 		<script src="libs/three/STLLoader.js"></script>
 		<script src="libs/three/ColladaLoader.js"></script>
 		<script src="libs/three/KeyFrameAnimation.js"></script>
 		<script src="libs/three/AnimationHandler.js"></script>
 		<script src="libs/three/Animation.js"></script>
+		<script src="js/createInstrumentConstructs.js"></script>
 
 		<script src="libs/three/Detector.js"></script>
 		<script src="libs/three/stats.min.js"></script>
-		<script src="js/mouse.three.js"></script>
 		<script src="js/worldElements.three.js"></script>
 		<script src="js/simpleModelLoader.three.js"></script>
+		<script src="js/mouse.three.js"></script>
 
 		<script src="js/clickable.three.js"></script>
-		<script src="js/instrumentConstructBase.js"></script>
+		<script src="js/unclickable.three.js"></script>
+		<script src="js/ConstructBases.js"></script>
+		<script src="js/worldElements.three.js"></script>
 
 
 <script>
-
+'use strict';
 // console.log(Instrument);
 var objects=worldManager.objects;
 var scene=worldManager.scene;
 var camera=worldManager.camera;
 var scenery;
+var mainLightsLevel=0.2;
+var clickables=[];
+var unclickables=[];
+var instrumentConstructs=[];
+var buttonConstructs=[];
+var testParticle;
 
-var currentPat=0;
-//used for instrumentConstructs
-var instrumentClickables=[];
-
-worldManager.onFrame=function(){};
-worldManager.on('start',function(){
-
-	this.ambientLight=new THREE.AmbientLight(0xffffff, 0);
-  scene.add(this.ambientLight);
-
-	scenery=new Scenery('./models/scenery.dae',function(){
-		scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
-		// console.log(this);
-
-		for(var a in this.instrumentObjects){
-			var a_inst=this.instrumentObjects[a];
-			// console.log(a);
-			//scene.remove(a_inst);
-			var nCk=new Clickable(a_inst);
-			instrumentClickables[a]=nCk;
-			objects.push(nCk);
-			nCk.instId=a;
-
-		}
-		for(var a of this.cubes){
-			// console.log(a);
-			scene.remove(a);
-			objects.push(new Clickable(a));
-		}
-		for(var a of this.lights){
-			console.log(a);
-			a.children[0].intensity=0;
-		}
-	});
-//
-//
-}).on('render',function(vars){
-
-});
-worldManager.start();
 for(var a of loopsDatabase){
 	patchMan.databaseItem(a);
 }
-var instrumentConstructs=[];
+Tone.Buffer.on("load",function(){
+	$("#loading").fadeOut();
+});
+window.onload=function(){
+	var dissappearOnPattrns=function(patns){
+		var assignMaterial=false;
+		// var animStart=false;
+		var animEnd=false;
+		var animLen=1;
+		var thisMesh=this;
+		var initialValue=0;
+		var targetValue=0;
+		this.material.transparent=true;
+		// assignMaterial=true;
+		patchMan.on('patternchangerequested',function(){
+			assignMaterial=true;
+			if(patns.indexOf(patchMan.currentPat)!==-1){
+				initialValue=thisMesh.material.opacity;
+				targetValue=0;
+			}else{
+				initialValue=thisMesh.material.opacity;
+				targetValue=1;
+			}
+		});
+		worldManager.on('render',function(e){
+			if(assignMaterial){
+				if(animEnd===false){
+					// animStart=e.time;
+					animEnd=e.time+animLen;
+					initialValue=thisMesh.material.opacity;
+				}
+				var animPos=1-(animEnd-e.time)/animLen;
+				// console.log("step0"+animPos);
 
-var onAllLoaded=function(){
-	var GCKBMN=function(name){
-		for(var a of instrumentClickables){
-			// console.log("+",a.object.name+"!="+name);
-			if(a.object.name==name)
-			return a
-		}
-		console.error(name+" not found in scenery");
+				thisMesh.material.opacity=targetValue*animPos+initialValue*(1-animPos);
+
+				if(animPos>=0.99999){
+					animEnd=false;
+					assignMaterial=false;
+				}
+			}
+		});
 	}
-	//!7 hey is not mapped to any instrument nor 14 ride 2  minor pad 13 hh, 17 trumps
-	var nin;
-	nin=new InstrumentConstruct(
-		"bombo",
-		[GCKBMN("inst-bombo-002"),
-		GCKBMN("inst-bombo-003"),
-		GCKBMN("inst-bombo-004")],
-		0
-	);
-	nin.setColor(0x00008f);
-	instrumentConstructs.push(nin);
-	nin=new InstrumentConstruct(
-		"kick_1",
-		[GCKBMN("inst-bombo-001")],
-		9
-	);
-	nin.setColor(0x00008f);
-	instrumentConstructs.push(nin);
-	nin=new InstrumentConstruct(
-		"kick_2",
-		[GCKBMN("inst-bombo-000")]
-	);
-	nin.setColor(0x00008f);
-	instrumentConstructs.push(nin);
-	nin=new InstrumentConstruct(
-		"shakers",
-		[GCKBMN("inst-Shaker-000"),
-		GCKBMN("inst-Shaker-001")],
-		8
-	);
-	nin.setColor(0xFFFFFF);
-	instrumentConstructs.push(nin);
-	nin=new InstrumentConstruct(
-		"timbal_1",
-		[GCKBMN("inst-Timbal-001")],
-		5
-	);
-	nin.setColor(0x763f2a);
-	instrumentConstructs.push(nin);
-	nin=new InstrumentConstruct(
-		"timbal_2",
-		[GCKBMN("inst-Timbal-000")],
-		6
-	);
-	nin.setColor(0x763f2a);
-	instrumentConstructs.push(nin);
-	nin=new InstrumentConstruct(
-		"organillo_1",
-		[GCKBMN("instSub-Organillo-Cuerpo-001"),
-		GCKBMN("instSub-Organillo-Manilla-001")],
-		4
-	);
-	nin.setColor(0x00ffff);
-	instrumentConstructs.push(nin);
-	nin=new InstrumentConstruct(
-		"organillo_2",
-		[GCKBMN("instSub-Organillo-Cuerpo-000"),
-		GCKBMN("instSub-Organillo-Manilla-000")],
-		3
-	);
-	nin.setColor(0x00ffff);
-	instrumentConstructs.push(nin);
-	nin=new InstrumentConstruct(
-		"snare",
-		[GCKBMN("inst-Snare")],
-		10
-	);
-	nin.setColor(0xffff00);
-	instrumentConstructs.push(nin);
-	nin=new InstrumentConstruct(
-		"clap",
-		[GCKBMN("inst-Clap")],
-		11
-	);
-	nin.setColor(0xccff00);
-	instrumentConstructs.push(nin);
-	nin=new InstrumentConstruct(
-		"bass",
-		[GCKBMN("inst-bass")],
-		1
-	);
-	nin.setColor(0xff00ff);
-	instrumentConstructs.push(nin);
+	worldManager.start();
+
+	scenery=new Scenery('./models/scenery.dae',function(){
+		for(var a in this.instrumentObjects){
+			var a_inst=this.instrumentObjects[a];
+			var nCk=new Clickable(a_inst);
+			clickables[a]=nCk;
+			nCk.instId=a;
+		}
+		for(var a in this.instrumentStands){
+			var a_inst=this.instrumentStands[a];
+			var nCk=new Unclickable(a_inst);
+			unclickables[a]=nCk;
+			nCk.instId=a;
+		}
+		for(var a of this.cubes){
+			scene.remove(a);
+			var nCk=new Clickable(a);
+			clickables.push(nCk);
+		}
+		for(var a of this.lights){
+			// console.log(a);
+			a.children[0].intensity=0;
+		}
+		for(var a of this.endingTrigger){
+			scene.remove(a);
+			var nCk=new Clickable(a);
+			clickables.push(nCk);
+		}
+
+
+
+		createInstrumentConstructs();
+		patchMan.changePatternTo(0);
+
+		addBackgroundImage(function(imageMesh){
+			imageMesh.material.opacity=0;
+			dissappearOnPattrns.call(imageMesh,[0,3,6]);
+		});
+
+
+		dissappearOnPattrns.call(scenery.building[0].children[0],[3,6]);
+
+	});
+
+
 }
+
 
 </script>
 	</body>

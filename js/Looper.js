@@ -1,5 +1,6 @@
-domList = [];
-engineList = [];
+'use strict';
+var domList = [];
+var engineList = [];
 
 var Looper;
 
@@ -17,9 +18,9 @@ $(window).on("load", function() {
 		var LooperMan=this;
 		var looperList=[];
 		var readyCountDown=0;
-		readyCountOne=function(){
+		var readyCountOne=function(){
 			readyCountDown--;
-			if(readyCountDown==0){
+			if(readyCountDown===0){
 				LooperMan.readyCall();
 			}
 		}
@@ -252,39 +253,44 @@ $(window).on("load", function() {
 							} else {
 									if (this.$.samplerTitle) this.$.samplerTitle.html(databaseItem.source);
 							}
-							this.engine = new Tone.Player(databaseItem.source, function(a) {
-									me.terminals = {
-											// sound:new Connector(me.$.connectorsPanel,{audioNode:me.engine,label:"sound"}),
-											// trigger:new Connector(me.$.connectorsPanel,{audioNode:me.engine,label:"trigger"})
-									}
-									me.beatsLength = Math.floor(globalTransport.bps * me.engine.buffer.duration);
-									if (me.$.sampLen) me.$.sampLen.html(me.engine.buffer.duration + "beats that take: " + (me.beatsLength));
-									// me.terminals.sound.connect();
-									//apparently this way of scheduling events is not so good idea
-									//I should try with the sequencer approach tomorrow. Is much more original, precise and versatile
-									if (me.components.play) me.components.play = new Button(me.$.controlPanel, {
-											label: "►"
-									}).onClick(function() {
-											me.metroLoop();
-									});
-									if (me.components.stop) me.components.stop.onClick(function() {
-											me.stop();
-									});
-									if (me.components.double) me.components.double.onClick(function() {
-											me.tempoFactor(2);
-									});
-									if (me.components.half) me.components.half.onClick(function() {
-											me.tempoFactor(0.5);
-									});
-									if (me.components.playerBender) me.components.playerBender.onRelease(function(bender) {
-											bender.setData(0.5);
-									});
-									if (me.components.playerBender) me.components.playerBender.onChange(function(bender) {
-											var value = bender.data.value * 2;
-											me.engine.playbackRate = (me.playbackRate) * value;
-									});
-									readyCountOne();
-							}).toMaster();
+							try{
+								this.engine = new Tone.Player(databaseItem.source, function(a) {
+										me.terminals = {
+												// sound:new Connector(me.$.connectorsPanel,{audioNode:me.engine,label:"sound"}),
+												// trigger:new Connector(me.$.connectorsPanel,{audioNode:me.engine,label:"trigger"})
+										}
+										me.beatsLength = Math.floor(globalTransport.bps * me.engine.buffer.duration);
+										if (me.$.sampLen) me.$.sampLen.html(me.engine.buffer.duration + "beats that take: " + (me.beatsLength));
+										// me.terminals.sound.connect();
+										//apparently this way of scheduling events is not so good idea
+										//I should try with the sequencer approach tomorrow. Is much more original, precise and versatile
+										if (me.components.play) me.components.play = new Button(me.$.controlPanel, {
+												label: "►"
+										}).onClick(function() {
+												me.metroLoop();
+										});
+										if (me.components.stop) me.components.stop.onClick(function() {
+												me.stop();
+										});
+										if (me.components.double) me.components.double.onClick(function() {
+												me.tempoFactor(2);
+										});
+										if (me.components.half) me.components.half.onClick(function() {
+												me.tempoFactor(0.5);
+										});
+										if (me.components.playerBender) me.components.playerBender.onRelease(function(bender) {
+												bender.setData(0.5);
+										});
+										if (me.components.playerBender) me.components.playerBender.onChange(function(bender) {
+												var value = bender.data.value * 2;
+												me.engine.playbackRate = (me.playbackRate) * value;
+										});
+										readyCountOne();
+								}).toMaster();
+							}catch(e){
+								console.log("failed loading ",databaseItem);
+								console.error(e);
+							}
 							this.engine.loop = false;
 							this.engine.retrigger = true;
 					} else {
